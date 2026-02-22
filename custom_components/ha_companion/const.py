@@ -192,14 +192,15 @@ SENSORS = [
         "name": "Sleep Start Time",
         "attribute": "sleep_info",
         "icon": "mdi:weather-night",
-        "json_extract": "startTime"
+        "json_extract": "startTime",
+        "time_convert": True   
     },
     {
         "key": "sleep_end_time",
         "name": "Sleep End Time",
         "attribute": "sleep_info",
         "icon": "mdi:weather-sunny",
-        "json_extract": "endTime"
+        "json_extract": "endTime",
+        "time_convert": True   
     },
-
 ]

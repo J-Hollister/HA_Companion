@@ -104,6 +104,11 @@ class WatchSensor(SensorEntity):
                 if self._config.get("disk_convert") and result is not None:
                     result = round(result / 1024 / 1024, 1)
 
+                if self._config.get("time_convert") and result is not None:
+                    hours = (result // 60) % 24
+                    minutes = result % 60
+                    result = f"{hours:02d}:{minutes:02d}"
+
                 return result
 
             except Exception as e:
