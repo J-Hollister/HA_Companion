@@ -201,4 +201,5 @@ SENSORS = [
         "icon": "mdi:weather-sunny",
         "json_extract": "endTime"
     },
+
 ]
