@@ -74,9 +74,9 @@ class WatchSensor(SensorEntity):
         # >>> AÑADIR ESTO: DEVICE INFO <<<
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{username}_watch")},
-            name=f"{base_name} Watch",
+            name=f"{base_name} Amazfit",
             manufacturer="Aguacatec Team",
-            model="Zepp OS Watch",
+            model="Amazfit Watch",
             sw_version=None,
         )
         # <<< FIN DEVICE INFO >>>
