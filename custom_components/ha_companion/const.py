@@ -243,5 +243,14 @@ SENSORS = [
         "state_class": "measurement",
         "sleep_stage_extract": "WAKE_STAGE"
     },
+    {
+        "key": "stress",
+        "name": "Stress",
+        "attribute": "stress_state",
+        "icon": "mdi:emoticon-happy",
+        "state_class": "measurement",
+        "json_extract": "value"
+    },
+
 
 ]

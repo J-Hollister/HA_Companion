@@ -45,7 +45,8 @@
       "sleep_deep_minutes": { "name": "Sommeil profond" },
       "sleep_rem_minutes": { "name": "Sommeil REM" },
       "sleep_light_minutes": { "name": "Sommeil léger" },
-      "sleep_wake_minutes": { "name": "Temps éveillé" }
+      "sleep_wake_minutes": { "name": "Temps éveillé" },
+      "stress": { "name": "Stress" }      
     }
   }
 }

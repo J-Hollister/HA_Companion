@@ -45,7 +45,8 @@
       "sleep_deep_minutes": { "name": "Głęboki sen" },
       "sleep_rem_minutes": { "name": "Sen REM" },
       "sleep_light_minutes": { "name": "Lekki sen" },
-      "sleep_wake_minutes": { "name": "Czas czuwania" }
+      "sleep_wake_minutes": { "name": "Czas czuwania" },
+      "stress": { "name": "Stres" }
     }
   }
 }

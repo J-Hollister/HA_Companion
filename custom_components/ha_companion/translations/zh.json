@@ -45,7 +45,8 @@
       "sleep_deep_minutes": { "name": "深度睡眠" },
       "sleep_rem_minutes": { "name": "快速眼动睡眠" },
       "sleep_light_minutes": { "name": "浅度睡眠" },
-      "sleep_wake_minutes": { "name": "清醒时间" }
+      "sleep_wake_minutes": { "name": "清醒时间" },
+      "stress": { "name": "压力" }
     }
   }
 }

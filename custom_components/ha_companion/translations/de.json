@@ -45,7 +45,8 @@
       "sleep_deep_minutes": { "name": "Tiefschlaf" },
       "sleep_rem_minutes": { "name": "REM-Schlaf" },
       "sleep_light_minutes": { "name": "Leichtschlaf" },
-      "sleep_wake_minutes": { "name": "Wachzeit" }
+      "sleep_wake_minutes": { "name": "Wachzeit" },
+      "stress": { "name": "Stress" }
     }
   }
 }

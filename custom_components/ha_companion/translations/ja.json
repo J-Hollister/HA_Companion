@@ -45,7 +45,8 @@
       "sleep_deep_minutes": { "name": "深い睡眠" },
       "sleep_rem_minutes": { "name": "レム睡眠" },
       "sleep_light_minutes": { "name": "浅い睡眠" },
-      "sleep_wake_minutes": { "name": "覚醒時間" }
+      "sleep_wake_minutes": { "name": "覚醒時間" },
+      "stress": { "name": "ストレス" }
     }
   }
 }
