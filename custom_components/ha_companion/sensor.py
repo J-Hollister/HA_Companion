@@ -226,11 +226,11 @@ class WatchSensor(SensorEntity):
 
             return total_minutes
 
-    except Exception as e:
-        _LOGGER.warning(
-            f"[{self._config['key']}] sleep_stage_extract error: {e}"
-        )
-        return None
+        except Exception as e:
+            _LOGGER.warning(
+                f"[{self._config['key']}] sleep_stage_extract error: {e}"
+            )
+            return None
 
     # ============================================================
     # HANDLERS
