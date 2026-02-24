@@ -251,6 +251,11 @@ SENSORS = [
         "state_class": "measurement",
         "json_extract": "value"
     },
-
+    {
+        "key": "wear",
+        "name": "Wear Status",
+        "attribute": "wear_state",
+        "icon": "mdi:watch",
+    },
 
 ]
