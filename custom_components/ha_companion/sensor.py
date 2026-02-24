@@ -14,6 +14,8 @@ from .const import DOMAIN, SENSORS
 _LOGGER = logging.getLogger(__name__)
 
 
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -48,7 +50,7 @@ class WatchSensor(SensorEntity):
         self._username = username
         self._master_sensor_id = master_sensor_id
         self._config = sensor_config
-
+        self._attr_entity_state_translation = True 
         self._attr_has_entity_name = True
         self._attr_translation_key = sensor_config.get("key")      
         #self._attr_name = sensor_config['name']
@@ -109,6 +111,7 @@ class WatchSensor(SensorEntity):
                     hours = (result // 60) % 24
                     minutes = result % 60
                     result = f"{hours:02d}:{minutes:02d}"
+
 
                 return result
 
@@ -235,6 +238,22 @@ class WatchSensor(SensorEntity):
     # ============================================================
     # HANDLERS
     # ============================================================
+    def _wear_to_text(self, raw_value):
+        """Convert 0-3 to friendly text."""
+        if raw_value is None:
+            return None
+        
+        try:
+            ivalue = int(raw_value)
+            mapping = {
+                0: "not_wearing",
+                1: "is_wearing", 
+                2: "in_motion",
+                3: "not_sure"
+            }
+            return mapping.get(ivalue, "Unknown")
+        except (TypeError, ValueError):
+            return "Unknown"
 
     @callback
     def _handle_master_update(self, event) -> None:
@@ -251,7 +270,10 @@ class WatchSensor(SensorEntity):
             self.async_write_ha_state()
             return
 
-        self._attr_native_value = self._extract_value(attr_value)
+        raw_value = self._extract_value(attr_value)
+        if self._config.get("key") == "wear":
+            raw_value = self._wear_to_text(raw_value)
+        self._attr_native_value = raw_value
         self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
 
@@ -263,5 +285,8 @@ class WatchSensor(SensorEntity):
         if master_state:
             attr_value = master_state.attributes.get(self._config["attribute"])
             if attr_value is not None:
-                self._attr_native_value = self._extract_value(attr_value)
+                raw_value = self._extract_value(attr_value)
+                if self._config.get("key") == "wear":
+                    raw_value = self._wear_to_text(raw_value)
+                self._attr_native_value = raw_value
                 self._attr_available = self._attr_native_value is not None

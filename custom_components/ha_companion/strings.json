@@ -47,7 +47,14 @@
       "sleep_light_minutes": { "name": "Light Sleep" },
       "sleep_wake_minutes": { "name": "Awake Time" },
       "stress": {"name":"Stress"},
-      "wear": { "name": "Wear Status" }
+      "wear": { "name": "Wear Status", 
+                "state": {
+                    "not_wearing": "Not Wearing",
+                    "is_wearing": "Is Wearing",
+                    "in_motion": "In Motion", 
+                    "not_sure": "Not Sure"
+                } 
+              }    
     }
   }
 }

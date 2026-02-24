@@ -16,39 +16,102 @@
     "abort": {
       "already_configured": "This device is already configured"
     }
-    
   },
   "entity": {
     "sensor": {
-      "battery": { "name": "Battery" },
-      "steps": { "name": "Steps" },
-      "steps_target": { "name": "Daily Steps Target" },
-      "heart_rate": { "name": "Heart Rate" },
-      "heart_max": { "name": "Max Heart Rate" },
-      "heart_resting": { "name": "Resting Heart Rate" },
-      "spo2": { "name": "Blood Oxygen" },
-      "calories": { "name": "Calories" },
-      "calories_target": { "name": "Calories Target" },
-      "distance": { "name": "Distance" },
-      "stand_hours": { "name": "Stand Hours" },
-      "stand_hours_target": { "name": "Stand Hours Target" },
-      "fat_burning": { "name": "Fat Burning" },
-      "fat_burning_target": { "name": "Fat Burning Target" },
-      "pai": { "name": "PAI Score" },
-      "pai_total": { "name": "PAI Total" },
-      "temperature": { "name": "Body Temperature" },
-      "sleep_status": { "name": "Sleep Status" },
-      "sleep_score": { "name": "Sleep Score" },
-      "sleep_total_time": { "name": "Sleep Total Time" },
-      "sleep_deep_time": { "name": "Deep Sleep Time" },
-      "sleep_start_time": { "name": "Sleep Start Time" },
-      "sleep_end_time": { "name": "Wake Up Time" },
-      "sleep_deep_minutes": { "name": "Deep Sleep" },
-      "sleep_rem_minutes": { "name": "REM Sleep" },
-      "sleep_light_minutes": { "name": "Light Sleep" },
-      "sleep_wake_minutes": { "name": "Awake Time" },
-      "stress": { "name": "Stress" },
-      "wear": { "name": "Wear Status" }
+      "battery": {
+        "name": "Battery"
+      },
+      "steps": {
+        "name": "Steps"
+      },
+      "steps_target": {
+        "name": "Daily Steps Target"
+      },
+      "heart_rate": {
+        "name": "Heart Rate"
+      },
+      "heart_max": {
+        "name": "Max Heart Rate"
+      },
+      "heart_resting": {
+        "name": "Resting Heart Rate"
+      },
+      "spo2": {
+        "name": "Blood Oxygen"
+      },
+      "calories": {
+        "name": "Calories"
+      },
+      "calories_target": {
+        "name": "Calories Target"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "stand_hours": {
+        "name": "Stand Hours"
+      },
+      "stand_hours_target": {
+        "name": "Stand Hours Target"
+      },
+      "fat_burning": {
+        "name": "Fat Burning"
+      },
+      "fat_burning_target": {
+        "name": "Fat Burning Target"
+      },
+      "pai": {
+        "name": "PAI Score"
+      },
+      "pai_total": {
+        "name": "PAI Total"
+      },
+      "temperature": {
+        "name": "Body Temperature"
+      },
+      "sleep_status": {
+        "name": "Sleep Status"
+      },
+      "sleep_score": {
+        "name": "Sleep Score"
+      },
+      "sleep_total_time": {
+        "name": "Sleep Total Time"
+      },
+      "sleep_deep_time": {
+        "name": "Deep Sleep Time"
+      },
+      "sleep_start_time": {
+        "name": "Sleep Start Time"
+      },
+      "sleep_end_time": {
+        "name": "Wake Up Time"
+      },
+      "sleep_deep_minutes": {
+        "name": "Deep Sleep"
+      },
+      "sleep_rem_minutes": {
+        "name": "REM Sleep"
+      },
+      "sleep_light_minutes": {
+        "name": "Light Sleep"
+      },
+      "sleep_wake_minutes": {
+        "name": "Awake Time"
+      },
+      "stress": {
+        "name": "Stress"
+      },
+      "wear": {
+        "name": "Wear Status",
+        "state": {
+          "not_wearing": "Not Wearing",
+          "is_wearing": "Is Wearing",
+          "in_motion": "In Motion",
+          "not_sure": "Not Sure"
+        }
+      }
     }
   }
-}
+  }
