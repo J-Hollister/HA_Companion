@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "Son REM" },
       "sleep_light_minutes": { "name": "Son lleuger" },
       "sleep_wake_minutes": { "name": "Temps despert" },
-      "stress": { "name": "Estrès" }      
+      "stress": { "name": "Estrès" },
+      "wear": { "name": "Estat del rellotge" }      
     }
   }
 }

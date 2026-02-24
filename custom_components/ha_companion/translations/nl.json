@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "REM-slaap" },
       "sleep_light_minutes": { "name": "Lichte slaap" },
       "sleep_wake_minutes": { "name": "Waktijd" },
-      "stress": { "name": "Stress" }
+      "stress": { "name": "Stress" },
+      "wear": { "name": "Draagstatus" }
     }
   }
 }

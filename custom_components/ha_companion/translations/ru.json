@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "REM-сон" },
       "sleep_light_minutes": { "name": "Лёгкий сон" },
       "sleep_wake_minutes": { "name": "Время бодрствования" },
-      "stress": { "name": "Стресс" }
+      "stress": { "name": "Стресс" },
+      "wear": { "name": "Статус ношения" }
     }
   }
 }

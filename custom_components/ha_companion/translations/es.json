@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "Sueño REM" },
       "sleep_light_minutes": { "name": "Sueño Ligero" },
       "sleep_wake_minutes": { "name": "Tiempo Despierto" },
-      "stress": { "name": "Estrés" }
+      "stress": { "name": "Estrés" },
+      "wear": { "name": "Estado del Reloj" }
     }
   }
 }

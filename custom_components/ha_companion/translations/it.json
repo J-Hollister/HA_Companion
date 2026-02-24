@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "Sonno REM" },
       "sleep_light_minutes": { "name": "Sonno leggero" },
       "sleep_wake_minutes": { "name": "Tempo sveglio" },
-	  "stress": { "name": "Stress" }      
+	  "stress": { "name": "Stress" },     
+      "wear": { "name": "Stato indosso" } 
     }
   }
 }

@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "Sen REM" },
       "sleep_light_minutes": { "name": "Lekki sen" },
       "sleep_wake_minutes": { "name": "Czas czuwania" },
-      "stress": { "name": "Stres" }
+      "stress": { "name": "Stres" },
+      "wear": { "name": "Status noszenia" }
     }
   }
 }

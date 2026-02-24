@@ -46,7 +46,8 @@
       "sleep_rem_minutes": { "name": "快速眼动睡眠" },
       "sleep_light_minutes": { "name": "浅度睡眠" },
       "sleep_wake_minutes": { "name": "清醒时间" },
-      "stress": { "name": "压力" }
+      "stress": { "name": "压力" },
+      "wear": { "name": "佩戴状态" }
     }
   }
 }
