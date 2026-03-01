@@ -142,21 +142,6 @@
             "air_pressure_state": {
                 "name": "Pressione atmosferica"
             },
-            "system_mode_dnd": {
-                "name": "Non disturbare"
-            },
-            "system_mode_sleep": {
-                "name": "Modalità Sonno"
-            },
-            "system_mode_theater": {
-                "name": "Modalità Teatro"
-            },
-            "system_mode_power_saving": {
-                "name": "Risparmio energetico"
-            },
-            "system_mode_ultra_power_saving": {
-                "name": "Ultra risparmio energetico"
-            },
             "os_version": {
                 "name": "Versione OS"
             },
@@ -174,6 +159,23 @@
                     "in_motion": "In movimento",
                     "not_sure": "Non sicuro"
                 }
+            }
+        },
+        "binary_sensor": {
+            "system_mode_dnd": {
+                "name": "Non disturbare"
+            },
+            "system_mode_sleep": {
+                "name": "Modalità Sonno"
+            },
+            "system_mode_theater": {
+                "name": "Modalità Teatro"
+            },
+            "system_mode_power_saving": {
+                "name": "Risparmio energetico"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Ultra risparmio energetico"
             }
         }
     }

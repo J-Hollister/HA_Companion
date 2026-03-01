@@ -142,21 +142,6 @@
             "air_pressure_state": {
                 "name": "Luchtdruk"
             },
-            "system_mode_dnd": {
-                "name": "Niet storen"
-            },
-            "system_mode_sleep": {
-                "name": "Slaapstand"
-            },
-            "system_mode_theater": {
-                "name": "Theatermodus"
-            },
-            "system_mode_power_saving": {
-                "name": "Energiebesparing"
-            },
-            "system_mode_ultra_power_saving": {
-                "name": "Ultra energiebesparing"
-            },
             "os_version": {
                 "name": "Systeemversie"
             },
@@ -174,6 +159,23 @@
                     "in_motion": "In beweging",
                     "not_sure": "Onzeker"
                 }
+            }
+        },
+        "binary_sensor": {
+            "system_mode_dnd": {
+                "name": "Niet storen"
+            },
+            "system_mode_sleep": {
+                "name": "Slaapstand"
+            },
+            "system_mode_theater": {
+                "name": "Theatermodus"
+            },
+            "system_mode_power_saving": {
+                "name": "Energiebesparing"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Ultra energiebesparing"
             }
         }
     }

@@ -142,21 +142,6 @@
             "air_pressure_state": {
                 "name": "Атмосферное давление"
             },
-            "system_mode_dnd": {
-                "name": "Не беспокоить"
-            },
-            "system_mode_sleep": {
-                "name": "Режим сна"
-            },
-            "system_mode_theater": {
-                "name": "Режим театра"
-            },
-            "system_mode_power_saving": {
-                "name": "Режим экономии энергии"
-            },
-            "system_mode_ultra_power_saving": {
-                "name": "Режим ультра экономии энергии"
-            },
             "os_version": {
                 "name": "Версия ОС"
             },
@@ -174,6 +159,23 @@
                     "in_motion": "В движении",
                     "not_sure": "Не определено"
                 }
+            }
+        },
+        "binary_sensor": {
+            "system_mode_dnd": {
+                "name": "Не беспокоить"
+            },
+            "system_mode_sleep": {
+                "name": "Режим сна"
+            },
+            "system_mode_theater": {
+                "name": "Режим театра"
+            },
+            "system_mode_power_saving": {
+                "name": "Режим экономии энергии"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Режим ультра экономии энергии"
             }
         }
     }

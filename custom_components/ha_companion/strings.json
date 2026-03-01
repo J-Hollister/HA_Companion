@@ -142,21 +142,6 @@
       "air_pressure_state": {
         "name": "Air Pressure"
       },
-      "system_mode_dnd": {
-        "name": "Do Not Disturb"
-      },
-      "system_mode_sleep": {
-        "name": "Sleep Mode"
-      },
-      "system_mode_theater": {
-        "name": "Theater Mode"
-      },
-      "system_mode_power_saving": {
-        "name": "Power Saving Mode"
-      },
-      "system_mode_ultra_power_saving": {
-        "name": "Ultra Power Saving Mode"
-      },
       "os_version": {
         "name": "OS Version"
       },
@@ -174,6 +159,23 @@
           "in_motion": "In Motion",
           "not_sure": "Not Sure"
         }
+      }
+    },
+    "binary_sensor": {
+      "system_mode_dnd": {
+        "name": "Do Not Disturb"
+      },
+      "system_mode_sleep": {
+        "name": "Sleep Mode"
+      },
+      "system_mode_theater": {
+        "name": "Theater Mode"
+      },
+      "system_mode_power_saving": {
+        "name": "Power Saving Mode"
+      },
+      "system_mode_ultra_power_saving": {
+        "name": "Ultra Power Saving Mode"
       }
     }
   }

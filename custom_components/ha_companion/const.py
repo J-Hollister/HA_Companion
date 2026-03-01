@@ -352,36 +352,6 @@ SENSORS = [
         "unit": "hPa",
     },
     { 
-        "key": "system_mode_dnd", 
-        "translation_key": "system_mode_dnd", 
-        "attribute": "system_mode_dnd", 
-        "icon": "mdi:minus-circle"
-    },
-    { 
-        "key": "system_mode_sleep", 
-        "translation_key": "system_mode_sleep", 
-        "attribute": "system_mode_sleep", ""
-        "icon": "mdi:sleep" 
-    },
-    { 
-        "key": "system_mode_theater", 
-        "translation_key": "system_mode_theater", 
-        "attribute": "system_mode_theater", 
-        "icon": "mdi:movie" 
-    },
-    { 
-        "key": "system_mode_power_saving", 
-        "translation_key": "system_mode_power_saving",
-        "attribute": "system_mode_power_saving", 
-        "icon": "mdi:battery-low" 
-    },
-    { 
-        "key": "system_mode_ultra_power_saving", 
-        "translation_key": "system_mode_ultra_power_saving", 
-        "attribute": "system_mode_ultra_power_saving", 
-        "icon": "mdi:battery-outline" 
-    },
-    { 
         "key": "os_version", 
         "translation_key": "os_version", 
         "attribute": "os_version", 
@@ -402,8 +372,41 @@ SENSORS = [
         "icon": "mdi:api", 
         "entity_category": "diagnostic"
     },
-
 ]
+
+BINARY_SENSORS = [
+    { 
+        "key": "system_mode_dnd", 
+        "translation_key": "system_mode_dnd", 
+        "attribute": "system_mode_dnd", 
+        "icon": "mdi:minus-circle", 
+    },
+    { 
+        "key": "system_mode_sleep", 
+        "translation_key": "system_mode_sleep", 
+        "attribute": "system_mode_sleep", 
+        "icon": "mdi:sleep", 
+    },
+    { 
+        "key": "system_mode_theater", 
+        "translation_key": "system_mode_theater", 
+        "attribute": "system_mode_theater", 
+        "icon": "mdi:movie", 
+    },
+    { 
+        "key": "system_mode_power_saving", 
+        "translation_key": "system_mode_power_saving", 
+        "attribute": "system_mode_power_saving", 
+        "icon": "mdi:battery-low", 
+    },
+    { 
+        "key": "system_mode_ultra_power_saving", 
+        "translation_key": "system_mode_ultra_power_saving", 
+        "attribute": "system_mode_ultra_power_saving", 
+        "icon": "mdi:battery-outline", 
+    },
+]
+
 
 SPORT_TYPES = {
     1001: "Outdoor Running", 
