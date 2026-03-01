@@ -268,7 +268,7 @@ SENSORS = [
         "translation_key": "Height",
         "attribute": "user_height",
         "icon": "mdi:human-male-height",
-        "unit": "m",
+        "unit": "cm",
     },
     {
         "key": "user_weight",
