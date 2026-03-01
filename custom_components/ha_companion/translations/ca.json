@@ -103,6 +103,39 @@
             "stress": {
                 "name": "Estrès"
             },
+            "user_age": {
+                "name": "Edat"
+            },
+            "user_height": {
+                "name": "Alçada"
+            },
+            "user_weight": {
+                "name": "Pes"
+            },
+            "user_gender": {
+                "name": "Gènere"
+            },
+            "user_region": {
+                "name": "Regió"
+            },
+            "workout_last_date": {
+                "name": "Data Darrer Entrenament"
+            },
+            "workout_last_duration": {
+                "name": "Durada Darrer Entrenament"
+            },
+            "workout_last_sport_type": {
+                "name": "Tipus Darrer Esport"
+            },
+            "workout_training_load": {
+                "name": "Càrrega d'Entrenament"
+            },
+            "workout_vo2_max": {
+                "name": "VO2 Màx"
+            },
+            "workout_count": {
+                "name": "Nombre d'Entrenaments"
+            },
             "wear": {
                 "name": "Estat del rellotge",
                 "state": {

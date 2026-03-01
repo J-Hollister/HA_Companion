@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, SENSORS
+from .const import DOMAIN, SENSORS, SPORT_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -255,6 +255,16 @@ class WatchSensor(SensorEntity):
         except (TypeError, ValueError):
             return "Unknown"
 
+    def _sport_type_to_text(self, raw_value):
+        """Convert sport type code to friendly text."""
+        if raw_value is None:
+            return None
+        try:
+            code = int(raw_value)
+            return SPORT_TYPES.get(code, f"Unknown ({code})")
+        except (TypeError, ValueError):
+            return str(raw_value)
+
     @callback
     def _handle_master_update(self, event) -> None:
         """Handle master sensor state changes."""
@@ -273,6 +283,8 @@ class WatchSensor(SensorEntity):
         raw_value = self._extract_value(attr_value)
         if self._config.get("key") == "wear":
             raw_value = self._wear_to_text(raw_value)
+        elif self._config.get("key") == "workout_last_sport_type":  # ← añadir
+            raw_value = self._sport_type_to_text(raw_value)            
         self._attr_native_value = raw_value
         self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
@@ -288,5 +300,7 @@ class WatchSensor(SensorEntity):
                 raw_value = self._extract_value(attr_value)
                 if self._config.get("key") == "wear":
                     raw_value = self._wear_to_text(raw_value)
+                elif self._config.get("key") == "workout_last_sport_type":  # ← añadir
+                    raw_value = self._sport_type_to_text(raw_value)                    
                 self._attr_native_value = raw_value
                 self._attr_available = self._attr_native_value is not None

@@ -103,6 +103,39 @@
             "stress": {
                 "name": "Stres"
             },
+            "user_age": {
+                "name": "Wiek"
+            },
+            "user_height": {
+                "name": "Wzrost"
+            },
+            "user_weight": {
+                "name": "Waga"
+            },
+            "user_gender": {
+                "name": "Płeć"
+            },
+            "user_region": {
+                "name": "Region"
+            },
+            "workout_last_date": {
+                "name": "Data Ostatniego Treningu"
+            },
+            "workout_last_duration": {
+                "name": "Czas Ostatniego Treningu"
+            },
+            "workout_last_sport_type": {
+                "name": "Ostatni Typ Sportu"
+            },
+            "workout_training_load": {
+                "name": "Obciążenie Treningowe"
+            },
+            "workout_vo2_max": {
+                "name": "VO2 Max"
+            },
+            "workout_count": {
+                "name": "Liczba Treningów"
+            },
             "wear": {
                 "name": "Status noszenia",
                 "state": {

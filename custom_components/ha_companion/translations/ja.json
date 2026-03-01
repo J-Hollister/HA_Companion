@@ -103,6 +103,39 @@
             "stress": {
                 "name": "ストレス"
             },
+            "user_age": {
+                "name": "年齢"
+            },
+            "user_height": {
+                "name": "身長"
+            },
+            "user_weight": {
+                "name": "体重"
+            },
+            "user_gender": {
+                "name": "性別"
+            },
+            "user_region": {
+                "name": "地域"
+            },
+            "workout_last_date": {
+                "name": "最後のトレーニング日"
+            },
+            "workout_last_duration": {
+                "name": "最後のトレーニング時間"
+            },
+            "workout_last_sport_type": {
+                "name": "最後のスポーツタイプ"
+            },
+            "workout_training_load": {
+                "name": "トレーニング負荷"
+            },
+            "workout_vo2_max": {
+                "name": "VO2 Max"
+            },
+            "workout_count": {
+                "name": "トレーニング回数"
+            },
             "wear": {
                 "name": "装着状態",
                 "state": {

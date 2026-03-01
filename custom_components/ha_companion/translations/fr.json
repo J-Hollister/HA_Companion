@@ -103,6 +103,39 @@
             "stress": {
                 "name": "Stress"
             },
+            "user_age": {
+                "name": "Âge"
+            },
+            "user_height": {
+                "name": "Taille"
+            },
+            "user_weight": {
+                "name": "Poids"
+            },
+            "user_gender": {
+                "name": "Genre"
+            },
+            "user_region": {
+                "name": "Région"
+            },
+            "workout_last_date": {
+                "name": "Date Dernier Entraînement"
+            },
+            "workout_last_duration": {
+                "name": "Durée Dernier Entraînement"
+            },
+            "workout_last_sport_type": {
+                "name": "Dernier Type de Sport"
+            },
+            "workout_training_load": {
+                "name": "Charge d'Entraînement"
+            },
+            "workout_vo2_max": {
+                "name": "VO2 Max"
+            },
+            "workout_count": {
+                "name": "Nombre d'Entraînements"
+            },            
             "wear": {
                 "name": "Statut du port",
                 "state": {

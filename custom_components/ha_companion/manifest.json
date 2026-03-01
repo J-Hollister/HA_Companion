@@ -1,7 +1,7 @@
 {
     "domain": "ha_companion",
     "name": "HA Companion",
-    "version": "0.0.5",
+    "version": "0.0.8",
     "documentation": "https://github.com/J-Hollister/HA-Companion",
     "requirements": [
       "aiohttp"

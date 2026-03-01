@@ -103,6 +103,39 @@
             "stress": {
                 "name": "压力"
             },
+            "user_age": {
+                "name": "年龄"
+            },
+            "user_height": {
+                "name": "身高"
+            },
+            "user_weight": {
+                "name": "体重"
+            },
+            "user_gender": {
+                "name": "性别"
+            },
+            "user_region": {
+                "name": "地区"
+            },
+            "workout_last_date": {
+                "name": "最近运动日期"
+            },
+            "workout_last_duration": {
+                "name": "最近运动时长"
+            },
+            "workout_last_sport_type": {
+                "name": "最近运动类型"
+            },
+            "workout_training_load": {
+                "name": "训练负荷"
+            },
+            "workout_vo2_max": {
+                "name": "最大摄氧量"
+            },
+            "workout_count": {
+                "name": "运动次数"
+            },
             "wear": {
                 "name": "佩戴状态",
                 "state": {
