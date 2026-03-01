@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import EntityCategory
 
 from .const import DOMAIN, SENSORS, SPORT_TYPES
 
@@ -61,7 +62,8 @@ class WatchSensor(SensorEntity):
         self._attr_state_class = sensor_config.get("state_class")
         self._attr_native_value = None
         self._attr_available = False
-
+        self._attr_entity_category = EntityCategory(sensor_config["entity_category"]) \
+            if sensor_config.get("entity_category") else None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{username}_watch")},
             name=f"{username.capitalize()} Amazfit Watch",

@@ -27,7 +27,8 @@ SENSORS = [
         "attribute": "steps_daily_target",
         "unit": "steps",
         "icon": "mdi:flag-checkered",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        "entity_category": "diagnostic",
     },    
     {
         "key": "heart_rate",
@@ -82,7 +83,8 @@ SENSORS = [
         "unit": "kcal",
         "device_class": "energy",
         "icon": "mdi:fire-circle",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        "entity_category": "diagnostic",
     },    
     {
         "key": "distance",
@@ -107,7 +109,8 @@ SENSORS = [
         "attribute": "stand_hours_target",
         "unit": "h",
         "icon": "mdi:human-handsup",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        "entity_category": "diagnostic",
     },    
     {
         "key": "fat_burning",
@@ -123,7 +126,8 @@ SENSORS = [
         "attribute": "fat_burning_minutes_target",
         "unit": "min",
         "icon": "mdi:fire-circle",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        "entity_category": "diagnostic",
     },    
     {
         "key": "pai",
@@ -262,6 +266,7 @@ SENSORS = [
         "translation_key": "Age",
         "attribute": "user_age",
         "icon": "mdi:account",
+        "entity_category": "diagnostic",
     },
     {
         "key": "user_height",
@@ -269,6 +274,7 @@ SENSORS = [
         "attribute": "user_height",
         "icon": "mdi:human-male-height",
         "unit": "cm",
+        "entity_category": "diagnostic",
     },
     {
         "key": "user_weight",
@@ -276,18 +282,21 @@ SENSORS = [
         "attribute": "user_weight",
         "icon": "mdi:weight-kilogram",
         "unit": "kg",
+        "entity_category": "diagnostic",
     },
     {
         "key": "user_gender",
         "translation_key": "Gender",
         "attribute": "user_gender",
         "icon": "mdi:gender-male-female",
+        "entity_category": "diagnostic",
     },
     {
         "key": "user_region",
         "translation_key": "Region",
         "attribute": "user_region",
         "icon": "mdi:earth",
+        "entity_category": "diagnostic",
     },
     {
         "key": "workout_last_date",
