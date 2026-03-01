@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "Presión atmosférica"
             },
+            "system_mode_dnd": {
+                "name": "No Molestar"
+            },
+            "system_mode_sleep": {
+                "name": "Modo Sueño"
+            },
+            "system_mode_theater": {
+                "name": "Modo Teatro"
+            },
+            "system_mode_power_saving": {
+                "name": "Modo Ahorro de Energía"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Modo Ultra Ahorro de Energía"
+            },
+            "os_version": {
+                "name": "Versión del Sistema"
+            },
+            "firmware_version": {
+                "name": "Versión del Firmware"
+            },
+            "min_api": {
+                "name": "API Mínima"
+            },
             "wear": {
                 "name": "Estado del Reloj",
                 "state": {

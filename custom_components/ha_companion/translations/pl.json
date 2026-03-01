@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "Ciśnienie atmosferyczne"
             },
+            "system_mode_dnd": {
+                "name": "Nie przeszkadzać"
+            },
+            "system_mode_sleep": {
+                "name": "Tryb snu"
+            },
+            "system_mode_theater": {
+                "name": "Tryb teatralny"
+            },
+            "system_mode_power_saving": {
+                "name": "Tryb oszczędzania energii"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Ultra tryb oszczędzania energii"
+            },
+            "os_version": {
+                "name": "Wersja systemu"
+            },
+            "firmware_version": {
+                "name": "Wersja firmware"
+            },
+            "min_api": {
+                "name": "Minimalne API"
+            },
             "wear": {
                 "name": "Status noszenia",
                 "state": {

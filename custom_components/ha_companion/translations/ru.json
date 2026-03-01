@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "Атмосферное давление"
             },
+            "system_mode_dnd": {
+                "name": "Не беспокоить"
+            },
+            "system_mode_sleep": {
+                "name": "Режим сна"
+            },
+            "system_mode_theater": {
+                "name": "Режим театра"
+            },
+            "system_mode_power_saving": {
+                "name": "Режим экономии энергии"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Режим ультра экономии энергии"
+            },
+            "os_version": {
+                "name": "Версия ОС"
+            },
+            "firmware_version": {
+                "name": "Версия прошивки"
+            },
+            "min_api": {
+                "name": "Минимальный API"
+            },
             "wear": {
                 "name": "Статус ношения",
                 "state": {

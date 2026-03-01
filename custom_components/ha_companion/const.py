@@ -351,6 +351,58 @@ SENSORS = [
         "icon": "mdi:gauge",
         "unit": "hPa",
     },
+    { 
+        "key": "system_mode_dnd", 
+        "translation_key": "system_mode_dnd", 
+        "attribute": "system_mode_dnd", 
+        "icon": "mdi:minus-circle"
+    },
+    { 
+        "key": "system_mode_sleep", 
+        "translation_key": "system_mode_sleep", 
+        "attribute": "system_mode_sleep", ""
+        "icon": "mdi:sleep" 
+    },
+    { 
+        "key": "system_mode_theater", 
+        "translation_key": "system_mode_theater", 
+        "attribute": "system_mode_theater", 
+        "icon": "mdi:movie" 
+    },
+    { 
+        "key": "system_mode_power_saving", 
+        "translation_key": "system_mode_power_saving",
+        "attribute": "system_mode_power_saving", 
+        "icon": "mdi:battery-low" 
+    },
+    { 
+        "key": "system_mode_ultra_power_saving", 
+        "translation_key": "system_mode_ultra_power_saving", 
+        "attribute": "system_mode_ultra_power_saving", 
+        "icon": "mdi:battery-outline" 
+    },
+    { 
+        "key": "os_version", 
+        "translation_key": "os_version", 
+        "attribute": "os_version", 
+        "icon": "mdi:cog", 
+        "entity_category": "diagnostic" 
+    },
+    { 
+        "key": "firmware_version", 
+        "translation_key": "firmware_version",
+        "attribute": "firmware_version", 
+        "icon": "mdi:chip",
+        "entity_category": "diagnostic"
+    },
+    { 
+        "key": "min_api", 
+        "translation_key": "min_api", 
+        "attribute": "min_api", 
+        "icon": "mdi:api", 
+        "entity_category": "diagnostic"
+    },
+
 ]
 
 SPORT_TYPES = {

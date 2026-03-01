@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "大气压"
             },
+            "system_mode_dnd": {
+                "name": "勿扰模式"
+            },
+            "system_mode_sleep": {
+                "name": "睡眠模式"
+            },
+            "system_mode_theater": {
+                "name": "剧院模式"
+            },
+            "system_mode_power_saving": {
+                "name": "省电模式"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "超级省电模式"
+            },
+            "os_version": {
+                "name": "系统版本"
+            },
+            "firmware_version": {
+                "name": "固件版本"
+            },
+            "min_api": {
+                "name": "最低API"
+            },
             "wear": {
                 "name": "佩戴状态",
                 "state": {

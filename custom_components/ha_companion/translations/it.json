@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "Pressione atmosferica"
             },
+            "system_mode_dnd": {
+                "name": "Non disturbare"
+            },
+            "system_mode_sleep": {
+                "name": "Modalità Sonno"
+            },
+            "system_mode_theater": {
+                "name": "Modalità Teatro"
+            },
+            "system_mode_power_saving": {
+                "name": "Risparmio energetico"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Ultra risparmio energetico"
+            },
+            "os_version": {
+                "name": "Versione OS"
+            },
+            "firmware_version": {
+                "name": "Versione Firmware"
+            },
+            "min_api": {
+                "name": "API minima"
+            },
             "wear": {
                 "name": "Stato indosso",
                 "state": {

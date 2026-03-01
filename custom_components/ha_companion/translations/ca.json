@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "Pressió atmosfèrica"
             },
+            "system_mode_dnd": {
+                "name": "No Molestar"
+            },
+            "system_mode_sleep": {
+                "name": "Mode Son"
+            },
+            "system_mode_theater": {
+                "name": "Mode Teatre"
+            },
+            "system_mode_power_saving": {
+                "name": "Estalvi d'Energia"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Ultra Estalvi d'Energia"
+            },
+            "os_version": {
+                "name": "Versió del Sistema"
+            },
+            "firmware_version": {
+                "name": "Versió del Firmware"
+            },
+            "min_api": {
+                "name": "API Mínima"
+            },
             "wear": {
                 "name": "Estat del rellotge",
                 "state": {

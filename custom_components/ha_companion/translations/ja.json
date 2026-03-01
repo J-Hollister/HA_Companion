@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "気圧"
             },
+            "system_mode_dnd": {
+                "name": "おやすみモード"
+            },
+            "system_mode_sleep": {
+                "name": "スリープモード"
+            },
+            "system_mode_theater": {
+                "name": "シアターモード"
+            },
+            "system_mode_power_saving": {
+                "name": "省エネモード"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "超省エネモード"
+            },
+            "os_version": {
+                "name": "OSバージョン"
+            },
+            "firmware_version": {
+                "name": "ファームウェアバージョン"
+            },
+            "min_api": {
+                "name": "最小API"
+            },
             "wear": {
                 "name": "装着状態",
                 "state": {

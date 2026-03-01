@@ -142,6 +142,30 @@
             "air_pressure_state": {
                 "name": "Pression atmosphérique"
             },
+            "system_mode_dnd": {
+                "name": "Ne pas déranger"
+            },
+            "system_mode_sleep": {
+                "name": "Mode Sommeil"
+            },
+            "system_mode_theater": {
+                "name": "Mode Théâtre"
+            },
+            "system_mode_power_saving": {
+                "name": "Mode Économie d'énergie"
+            },
+            "system_mode_ultra_power_saving": {
+                "name": "Mode Ultra Économie d'énergie"
+            },
+            "os_version": {
+                "name": "Version du système"
+            },
+            "firmware_version": {
+                "name": "Version du firmware"
+            },
+            "min_api": {
+                "name": "API minimale"
+            },
             "wear": {
                 "name": "Statut du port",
                 "state": {
