@@ -135,7 +135,13 @@
             },
             "workout_count": {
                 "name": "Nombre d'Entraînements"
-            },            
+            },
+            "altitude_state": {
+                "name": "Altitude"
+            },
+            "air_pressure_state": {
+                "name": "Pression atmosphérique"
+            },
             "wear": {
                 "name": "Statut du port",
                 "state": {

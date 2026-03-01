@@ -136,6 +136,12 @@
             "workout_count": {
                 "name": "Liczba Treningów"
             },
+            "altitude_state": {
+                "name": "Wysokość"
+            },
+            "air_pressure_state": {
+                "name": "Ciśnienie atmosferyczne"
+            },
             "wear": {
                 "name": "Status noszenia",
                 "state": {

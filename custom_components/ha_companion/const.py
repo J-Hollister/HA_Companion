@@ -328,6 +328,20 @@ SENSORS = [
         "attribute": "workout_count",
         "icon": "mdi:counter",
     },
+    {
+        "key": "altitude_state",
+        "translation_key": "altitude_state",
+        "attribute": "altitude_state",
+        "icon": "mdi:elevation-rise",
+        "unit": "m",
+    },
+    {
+        "key": "air_pressure_state",
+        "translation_key": "air_pressure_state",
+        "attribute": "air_pressure_state",
+        "icon": "mdi:gauge",
+        "unit": "hPa",
+    },
 ]
 
 SPORT_TYPES = {

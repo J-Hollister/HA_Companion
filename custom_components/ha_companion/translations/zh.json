@@ -136,6 +136,12 @@
             "workout_count": {
                 "name": "运动次数"
             },
+            "altitude_state": {
+                "name": "海拔"
+            },
+            "air_pressure_state": {
+                "name": "大气压"
+            },
             "wear": {
                 "name": "佩戴状态",
                 "state": {
