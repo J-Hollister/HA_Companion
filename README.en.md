@@ -1,5 +1,5 @@
 # ⌚ HA Companion Integration ⌚
-🌐 [Spanish Version](README.md)
+>🌐 [Spanish Version](README.md)
 
 ## What can the HA Companion Integration do?
 
