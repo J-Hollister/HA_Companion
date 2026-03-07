@@ -43,7 +43,14 @@ Para añadir la integración a tu instancia de Home Assistant, usa el botón:
 
 Una vez instalado, ve a _Dispositivos y Servicios → Añadir Integración_ y busca _HA Companion_.
 
-El asistente te solicitará el nombre de usuario que tienes puesto en tu aplicacion de Zepp HA Companion, y la proxima vez que actualice los datos se rellenaran automaticamente
+El asistente te solicitará el nombre de usuario que tienes puesto en tu aplicacion de Zepp HA Companion
+
+<img width="435" height="241" alt="image" src="https://github.com/user-attachments/assets/30f41782-7c94-42f2-81f6-a7cbbb2d4d4f" />
+
+Una vez configurado, tendras la integracion con todos los sensores de tu reloj, si te aparecen no disponibles, solo tienes que usar la aplicación en tu reloj y apareceran por arte de Magia  
+
+<img width="370" height="1094" alt="image" src="https://github.com/user-attachments/assets/2fec4a6d-79a8-4f14-9090-fb7886595e59" />
+
 
 ---
 
