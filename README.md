@@ -1,4 +1,5 @@
 # ⌚ Integracion HA Companion ⌚
+> 🌐 [English version](README.en.md)
 
 ## ¿Qué puede hacer esta Integracion HA Companion?
 
