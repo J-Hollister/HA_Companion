@@ -301,8 +301,10 @@ class WatchSensor(SensorEntity):
         raw_value = self._extract_value(attr_value)
         if self._config.get("key") == "wear":
             raw_value = self._wear_to_text(raw_value)
-        elif self._config.get("key") == "workout_last_sport_type":  # ← añadir
-            raw_value = self._sport_type_to_text(raw_value)            
+        elif self._config.get("key") == "workout_last_sport_type":
+            raw_value = self._sport_type_to_text(raw_value)
+        if raw_value == "Not supported":
+            raw_value = None
         self._attr_native_value = raw_value
         self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
@@ -318,8 +320,10 @@ class WatchSensor(SensorEntity):
                 raw_value = self._extract_value(attr_value)
                 if self._config.get("key") == "wear":
                     raw_value = self._wear_to_text(raw_value)
-                elif self._config.get("key") == "workout_last_sport_type":  # ← añadir
+                elif self._config.get("key") == "workout_last_sport_type":
                     raw_value = self._sport_type_to_text(raw_value)
+                if raw_value == "Not supported":
+                    raw_value = None
                 self._attr_native_value = raw_value
                 self._attr_available = self._attr_native_value is not None
 
