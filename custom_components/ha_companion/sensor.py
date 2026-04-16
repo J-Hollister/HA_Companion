@@ -4,6 +4,7 @@ import logging
 import json
 from datetime import datetime, timezone
 from homeassistant.components.sensor import SensorEntity
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

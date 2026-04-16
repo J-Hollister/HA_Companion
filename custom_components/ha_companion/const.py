@@ -395,6 +395,59 @@ SENSORS = [
         "icon": "mdi:sync",
         "entity_category": "diagnostic"
     },
+    {
+        "key": "workout_full_recovery_time",
+        "translation_key": "workout_full_recovery_time",
+        "attribute": "workout_full_recovery_time",
+        "icon": "mdi:timer-refresh-outline",
+        "unit": "h",
+        "state_class": "measurement"
+    },
+    {
+        "key": "screen_brightness",
+        "translation_key": "screen_brightness",
+        "attribute": "screen_brightness",
+        "icon": "mdi:brightness-6",
+        "unit": "%",
+        "state_class": "measurement",
+        "entity_category": "diagnostic"
+    },
+    {
+        "key": "device_name",
+        "translation_key": "device_name",
+        "attribute": "device_name",
+        "icon": "mdi:watch",
+        "entity_category": "diagnostic"
+    },
+    {
+        "key": "user_nick_name",
+        "translation_key": "user_nick_name",
+        "attribute": "user_nick_name",
+        "icon": "mdi:account-circle",
+        "entity_category": "diagnostic"
+    },
+    {
+        "key": "disk_free",
+        "translation_key": "disk_free",
+        "attribute": "disk_info",
+        "icon": "mdi:harddisk",
+        "unit": "MB",
+        "state_class": "measurement",
+        "entity_category": "diagnostic",
+        "json_extract": "free",
+        "disk_convert": True
+    },
+    {
+        "key": "disk_total",
+        "translation_key": "disk_total",
+        "attribute": "disk_info",
+        "icon": "mdi:harddisk",
+        "unit": "MB",
+        "state_class": "measurement",
+        "entity_category": "diagnostic",
+        "json_extract": "total",
+        "disk_convert": True
+    },
 ]
 
 BINARY_SENSORS = [
@@ -422,11 +475,17 @@ BINARY_SENSORS = [
         "attribute": "system_mode_power_saving", 
         "icon": "mdi:battery-low", 
     },
-    { 
-        "key": "system_mode_ultra_power_saving", 
-        "translation_key": "system_mode_ultra_power_saving", 
-        "attribute": "system_mode_ultra_power_saving", 
-        "icon": "mdi:battery-outline", 
+    {
+        "key": "system_mode_ultra_power_saving",
+        "translation_key": "system_mode_ultra_power_saving",
+        "attribute": "system_mode_ultra_power_saving",
+        "icon": "mdi:battery-outline",
+    },
+    {
+        "key": "screen_aod_mode",
+        "translation_key": "screen_aod_mode",
+        "attribute": "screen_aod_mode",
+        "icon": "mdi:overscan",
     },
 ]
 

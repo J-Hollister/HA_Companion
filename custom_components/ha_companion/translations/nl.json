@@ -163,6 +163,24 @@
             "update_source": {
                 "name": "Updatebron"
             },
+            "workout_full_recovery_time": {
+                "name": "Volledige hersteltijd"
+            },
+            "screen_brightness": {
+                "name": "Schermhelderheid"
+            },
+            "device_name": {
+                "name": "Apparaatmodel"
+            },
+            "user_nick_name": {
+                "name": "Gebruikersnaam"
+            },
+            "disk_free": {
+                "name": "Vrije opslag"
+            },
+            "disk_total": {
+                "name": "Totale opslag"
+            },
             "wear": {
                 "name": "Draagstatus",
                 "state": {
@@ -188,6 +206,12 @@
             },
             "system_mode_ultra_power_saving": {
                 "name": "Ultra energiebesparing"
+            },
+            "screen_aod_mode": {
+                "name": "Altijd aan display"
+            },
+            "update_pending": {
+                "name": "Update beschikbaar"
             }
         }
     }

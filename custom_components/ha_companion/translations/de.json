@@ -163,6 +163,24 @@
             "update_source": {
                 "name": "Aktualisierungsquelle"
             },
+            "workout_full_recovery_time": {
+                "name": "Vollständige Erholungszeit"
+            },
+            "screen_brightness": {
+                "name": "Bildschirmhelligkeit"
+            },
+            "device_name": {
+                "name": "Gerätemodell"
+            },
+            "user_nick_name": {
+                "name": "Benutzername"
+            },
+            "disk_free": {
+                "name": "Freier Speicher"
+            },
+            "disk_total": {
+                "name": "Gesamtspeicher"
+            },
             "wear": {
                 "name": "Tragesstatus",
                 "state": {
@@ -188,6 +206,12 @@
             },
             "system_mode_ultra_power_saving": {
                 "name": "Ultra-Energiesparmodus"
+            },
+            "screen_aod_mode": {
+                "name": "Always-On-Display"
+            },
+            "update_pending": {
+                "name": "Update verfügbar"
             }
         }
     }

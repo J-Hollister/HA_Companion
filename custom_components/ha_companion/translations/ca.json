@@ -163,6 +163,24 @@
             "update_source": {
                 "name": "Origen de l'Actualització"
             },
+            "workout_full_recovery_time": {
+                "name": "Temps de Recuperació Total"
+            },
+            "screen_brightness": {
+                "name": "Brillantor de Pantalla"
+            },
+            "device_name": {
+                "name": "Model del Dispositiu"
+            },
+            "user_nick_name": {
+                "name": "Nom d'Usuari"
+            },
+            "disk_free": {
+                "name": "Emmagatzematge Lliure"
+            },
+            "disk_total": {
+                "name": "Emmagatzematge Total"
+            },
             "wear": {
                 "name": "Estat del rellotge",
                 "state": {
@@ -188,6 +206,12 @@
             },
             "system_mode_ultra_power_saving": {
                 "name": "Ultra Estalvi d'Energia"
+            },
+            "screen_aod_mode": {
+                "name": "Pantalla Sempre Activa"
+            },
+            "update_pending": {
+                "name": "Actualització Disponible"
             }
         }
     }

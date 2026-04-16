@@ -163,6 +163,24 @@
             "update_source": {
                 "name": "Origen de la Actualización"
             },
+            "workout_full_recovery_time": {
+                "name": "Tiempo de Recuperación Total"
+            },
+            "screen_brightness": {
+                "name": "Brillo de Pantalla"
+            },
+            "device_name": {
+                "name": "Modelo del Dispositivo"
+            },
+            "user_nick_name": {
+                "name": "Nombre de Usuario"
+            },
+            "disk_free": {
+                "name": "Almacenamiento Libre"
+            },
+            "disk_total": {
+                "name": "Almacenamiento Total"
+            },
             "wear": {
                 "name": "Estado del Reloj",
                 "state": {
@@ -188,6 +206,12 @@
             },
             "system_mode_ultra_power_saving": {
                 "name": "Modo Ultra Ahorro de Energía"
+            },
+            "screen_aod_mode": {
+                "name": "Pantalla Siempre Activa"
+            },
+            "update_pending": {
+                "name": "Actualización Disponible"
             }
         }
     }

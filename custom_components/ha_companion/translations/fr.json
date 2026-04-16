@@ -163,6 +163,24 @@
             "update_source": {
                 "name": "Source de mise à jour"
             },
+            "workout_full_recovery_time": {
+                "name": "Temps de récupération total"
+            },
+            "screen_brightness": {
+                "name": "Luminosité de l'écran"
+            },
+            "device_name": {
+                "name": "Modèle de l'appareil"
+            },
+            "user_nick_name": {
+                "name": "Pseudo utilisateur"
+            },
+            "disk_free": {
+                "name": "Stockage libre"
+            },
+            "disk_total": {
+                "name": "Stockage total"
+            },
             "wear": {
                 "name": "Statut du port",
                 "state": {
@@ -188,6 +206,12 @@
             },
             "system_mode_ultra_power_saving": {
                 "name": "Mode Ultra Économie d'énergie"
+            },
+            "screen_aod_mode": {
+                "name": "Écran toujours actif"
+            },
+            "update_pending": {
+                "name": "Mise à jour disponible"
             }
         }
     }

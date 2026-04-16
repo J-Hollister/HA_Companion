@@ -163,6 +163,24 @@
       "update_source": {
         "name": "Update Source"
       },
+      "workout_full_recovery_time": {
+        "name": "Full Recovery Time"
+      },
+      "screen_brightness": {
+        "name": "Screen Brightness"
+      },
+      "device_name": {
+        "name": "Device Model"
+      },
+      "user_nick_name": {
+        "name": "User Nickname"
+      },
+      "disk_free": {
+        "name": "Storage Free"
+      },
+      "disk_total": {
+        "name": "Storage Total"
+      },
       "wear": {
         "name": "Wear Status",
         "state": {
@@ -188,6 +206,12 @@
       },
       "system_mode_ultra_power_saving": {
         "name": "Ultra Power Saving Mode"
+      },
+      "screen_aod_mode": {
+        "name": "Always-On Display"
+      },
+      "update_pending": {
+        "name": "Update Available"
       }
     }
   }
