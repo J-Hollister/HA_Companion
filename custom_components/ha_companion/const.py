@@ -346,6 +346,13 @@ SENSORS = [
         "icon": "mdi:counter",
     },
     {
+        "key": "workout_history",
+        "translation_key": "workout_history",
+        "attribute": "workout_history",
+        "icon": "mdi:history",
+        "workout_history_extract": True,
+    },
+    {
         "key": "altitude_state",
         "translation_key": "altitude_state",
         "attribute": "altitude_state",

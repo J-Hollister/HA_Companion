@@ -166,6 +166,9 @@
       "workout_full_recovery_time": {
         "name": "Full Recovery Time"
       },
+      "workout_history": {
+        "name": "Recent Workouts"
+      },
       "screen_brightness": {
         "name": "Screen Brightness"
       },

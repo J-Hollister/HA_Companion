@@ -34,9 +34,14 @@ async def async_setup_entry(
 
     entities = []
     for sensor_config in SENSORS:
-        entities.append(
-            WatchSensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
-        )
+        if sensor_config.get("workout_history_extract"):
+            entities.append(
+                WatchWorkoutHistorySensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
+            )
+        else:
+            entities.append(
+                WatchSensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
+            )
     entities.append(PublishedVersionSensor(coordinator, config_entry.entry_id, username))
     async_add_entities(entities, True)
 
@@ -307,6 +312,68 @@ class WatchSensor(SensorEntity):
                     raw_value = None
                 self._attr_native_value = raw_value
                 self._attr_available = self._attr_native_value is not None
+
+
+class WatchWorkoutHistorySensor(WatchSensor):
+    """Sensor whose state is the number of recent workouts and attributes list each one."""
+
+    def __init__(self, hass, entry_id, username, master_sensor_id, sensor_config):
+        super().__init__(hass, entry_id, username, master_sensor_id, sensor_config)
+        self._recent_workouts: list = []
+
+    def _parse_history(self, attr_value) -> list:
+        try:
+            data = json.loads(attr_value) if isinstance(attr_value, str) else attr_value
+            if not isinstance(data, list):
+                return []
+            from .const import SPORT_TYPES
+            result = []
+            for w in data[:10]:
+                sport_id = w.get("sport_type")
+                sport_name = SPORT_TYPES.get(int(sport_id), f"Unknown ({sport_id})") if sport_id else "Unknown"
+                start_ts = w.get("start")
+                try:
+                    dt = datetime.fromisoformat(str(start_ts).replace("Z", "+00:00"))
+                    date_str = dt.strftime("%Y-%m-%d %H:%M")
+                except Exception:
+                    date_str = str(start_ts)
+                duration = w.get("duration_min", 0)
+                result.append(f"{date_str} — {sport_name} ({duration} min)")
+            return result
+        except Exception as e:
+            _LOGGER.warning(f"[workout_history] parse error: {e}")
+            return []
+
+    @callback
+    def _handle_master_update(self, event) -> None:
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        attr_value = new_state.attributes.get("workout_history")
+        if attr_value is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        self._recent_workouts = self._parse_history(attr_value)
+        self._attr_native_value = len(self._recent_workouts)
+        self._attr_available = True
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        master_state = self.hass.states.get(self._master_sensor_id)
+        if master_state:
+            attr_value = master_state.attributes.get("workout_history")
+            if attr_value is not None:
+                self._recent_workouts = self._parse_history(attr_value)
+                self._attr_native_value = len(self._recent_workouts)
+                self._attr_available = True
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"recent_workouts": self._recent_workouts}
 
 
 class PublishedVersionSensor(CoordinatorEntity, SensorEntity):
