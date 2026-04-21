@@ -85,10 +85,6 @@ class WatchSensor(SensorEntity):
             sw_version=None,
         )
 
-        async_track_state_change_event(
-            hass, [master_sensor_id], self._handle_master_update
-        )
-
     # ============================================================
     # EXTRACTORES
     # ============================================================
@@ -308,6 +304,12 @@ class WatchSensor(SensorEntity):
                     raw_value = None
                 self._attr_native_value = raw_value
                 self._attr_available = self._attr_native_value is not None
+
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._master_sensor_id], self._handle_master_update
+            )
+        )
 
 
 class WatchWorkoutHistorySensor(WatchSensor):

@@ -72,10 +72,6 @@ class WatchBinarySensor(BinarySensorEntity):
             sw_version=None,
         )
 
-        async_track_state_change_event(
-            hass, [master_sensor_id], self._handle_master_update
-        )
-
     def _parse_value(self, attr_value) -> bool | None:
         """Convert attribute value to boolean."""
         if attr_value is None:
@@ -128,6 +124,12 @@ class WatchBinarySensor(BinarySensorEntity):
                 parsed = self._parse_value(attr_value)
                 self._attr_is_on = parsed
                 self._attr_available = parsed is not None
+
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._master_sensor_id], self._handle_master_update
+            )
+        )
 
 
 class UpdatePendingBinarySensor(CoordinatorEntity, BinarySensorEntity):
