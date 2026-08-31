@@ -189,6 +189,9 @@
                     "in_motion": "En movimiento",
                     "not_sure": "No determinado"
                 }
+            },
+            "sleep_timeline": {
+                "name": "Cronología del Sueño"
             }
         },
         "binary_sensor": {
@@ -233,6 +236,9 @@
             },
             "update_pending": {
                 "name": "Actualización Disponible"
+            },
+            "is_charging": {
+                "name": "Cargando"
             }
         }
     }

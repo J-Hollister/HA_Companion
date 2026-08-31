@@ -140,7 +140,9 @@ SENSORS = [
         "attribute": "pai_state",
         "unit": "PAI",
         "icon": "mdi:chart-line",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        # 7-day daily mean/min/max in extra_state_attributes.last_week (see stress above).
+        "trend_extract": True
     },
     {
         "key": "pai_total",
@@ -253,11 +255,26 @@ SENSORS = [
         "sleep_stage_extract": "WAKE_STAGE"
     },
     {
+        # State = number of segments in the last sleep session; extra_state_attributes.timeline
+        # is the per-cycle breakdown (phase name + start/stop HH:MM + duration_min), built from
+        # the same raw sleep_stage_data ({model, start, stop} minutes-since-midnight) the
+        # sleep_*_minutes sensors above already sum. See WatchSleepTimelineSensor.
+        "key": "sleep_timeline",
+        "translation_key": "sleep_timeline",
+        "attribute": "sleep_stage_data",
+        "icon": "mdi:timeline-clock-outline",
+        "sleep_timeline_extract": True,
+    },
+    {
         "key": "stress",
         "attribute": "stress_state",
         "icon": "mdi:emoticon-happy",
         "state_class": "measurement",
-        "json_extract": "value"
+        "json_extract": "value",
+        # 7-day daily mean/min/max in extra_state_attributes.last_week, from HA's own
+        # recorder statistics (this sensor already has state_class: measurement, so HA
+        # records daily long-term stats for it automatically — no watch-side change).
+        "trend_extract": True
     },
     {
         "key": "wear",
@@ -464,8 +481,19 @@ SENSORS = [
 ]
 
 BINARY_SENSORS = [
-    { 
-        "key": "system_mode_dnd", 
+    {
+        # Zepp OS has no native "is charging" flag (checked: the Battery sensor only
+        # exposes getCurrent()), so this is inferred from the battery_state delta
+        # between consecutive master-sensor updates. See WatchChargingBinarySensor.
+        "key": "is_charging",
+        "translation_key": "is_charging",
+        "attribute": "battery_state",
+        "icon": "mdi:battery-charging",
+        "device_class": "battery_charging",
+        "charging_extract": True,
+    },
+    {
+        "key": "system_mode_dnd",
         "translation_key": "system_mode_dnd", 
         "attribute": "system_mode_dnd", 
         "icon": "mdi:minus-circle", 

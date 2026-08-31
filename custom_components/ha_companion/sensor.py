@@ -2,18 +2,24 @@
 from __future__ import annotations
 import logging
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from homeassistant.components.sensor import SensorEntity
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_track_state_change_event, async_track_time_interval
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.const import EntityCategory
+from homeassistant.util import dt as dt_util
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.statistics import statistics_during_period
 
 from .const import DOMAIN, SENSORS
+
+TREND_REFRESH_INTERVAL = timedelta(hours=6)
+TREND_DAYS = 7
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +43,10 @@ async def async_setup_entry(
         if sensor_config.get("workout_history_extract"):
             entities.append(
                 WatchWorkoutHistorySensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
+            )
+        elif sensor_config.get("sleep_timeline_extract"):
+            entities.append(
+                WatchSleepTimelineSensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
             )
         else:
             entities.append(
@@ -75,6 +85,7 @@ class WatchSensor(SensorEntity):
         self._attr_available = False
         self._cached_raw_constants = None
         self._cached_constants = None
+        self._last_week = None  # only populated when sensor_config has trend_extract
         self._attr_entity_category = EntityCategory(sensor_config["entity_category"]) \
             if sensor_config.get("entity_category") else None
         self._attr_device_info = DeviceInfo(
@@ -267,6 +278,50 @@ class WatchSensor(SensorEntity):
             return None
 
     # ============================================================
+    # TENDENCIA 7 DÍAS (trend_extract) — de las estadísticas del propio
+    # recorder de HA, no de nada que mande el reloj.
+    # ============================================================
+    @property
+    def extra_state_attributes(self) -> dict:
+        if self._config.get("trend_extract"):
+            return {"last_week": self._last_week}
+        return {}
+
+    async def _async_refresh_trend(self, now=None) -> None:
+        """Pull this entity's own daily statistics for the last 7 days.
+
+        Requires state_class to be set (it is, on every trend_extract sensor) so HA's
+        recorder already generates long-term (daily) statistics for it automatically —
+        no extra recording config needed. Best-effort: any failure just logs and leaves
+        last_week as it was.
+        """
+        if not self.entity_id:
+            return
+        try:
+            end = dt_util.utcnow()
+            start = end - timedelta(days=TREND_DAYS)
+            stats = await get_instance(self.hass).async_add_executor_job(
+                statistics_during_period,
+                self.hass, start, end, {self.entity_id}, "day", None, {"mean", "min", "max"},
+            )
+            rows = stats.get(self.entity_id, [])
+            last_week = []
+            for row in rows:
+                start_ts = row.get("start")
+                day = dt_util.as_local(dt_util.utc_from_timestamp(start_ts)) if isinstance(start_ts, (int, float)) \
+                    else dt_util.as_local(start_ts)
+                last_week.append({
+                    "date": day.strftime("%Y-%m-%d"),
+                    "mean": round(row["mean"], 1) if row.get("mean") is not None else None,
+                    "min": round(row["min"], 1) if row.get("min") is not None else None,
+                    "max": round(row["max"], 1) if row.get("max") is not None else None,
+                })
+            self._last_week = last_week
+            self.async_write_ha_state()
+        except Exception as e:
+            _LOGGER.warning(f"[{self._config['key']}] trend refresh error: {e}")
+
+    # ============================================================
     # HANDLERS
     # ============================================================
     @callback
@@ -310,6 +365,14 @@ class WatchSensor(SensorEntity):
                 self.hass, [self._master_sensor_id], self._handle_master_update
             )
         )
+
+        if self._config.get("trend_extract"):
+            await self._async_refresh_trend()
+            self.async_on_remove(
+                async_track_time_interval(
+                    self.hass, self._async_refresh_trend, TREND_REFRESH_INTERVAL
+                )
+            )
 
 
 class WatchWorkoutHistorySensor(WatchSensor):
@@ -372,6 +435,95 @@ class WatchWorkoutHistorySensor(WatchSensor):
     @property
     def extra_state_attributes(self) -> dict:
         return {"recent_workouts": self._recent_workouts}
+
+
+class WatchSleepTimelineSensor(WatchSensor):
+    """Sensor whose state is the number of sleep-stage segments in the last session;
+    extra_state_attributes.timeline lists each segment (phase name + start/stop HH:MM
+    + duration_min), built from the same raw sleep_stage_data the sleep_*_minutes
+    sensors already sum — no watch-side change needed."""
+
+    def __init__(self, hass, entry_id, username, master_sensor_id, sensor_config):
+        super().__init__(hass, entry_id, username, master_sensor_id, sensor_config)
+        self._timeline: list = []
+        self._model_to_name: dict = {}
+
+    def _refresh_model_names(self) -> None:
+        """(Re)build the model-id -> stage-name map from the master's sleep_stage_constant,
+        cached the same way _extract_sleep_stage does."""
+        master_state = self.hass.states.get(self._master_sensor_id)
+        if not master_state:
+            return
+        raw_constants = master_state.attributes.get("sleep_stage_constant")
+        if raw_constants is None or raw_constants == self._cached_raw_constants:
+            return
+        try:
+            constants = json.loads(raw_constants) if isinstance(raw_constants, str) else raw_constants
+            if not isinstance(constants, dict):
+                return
+            self._cached_constants = constants
+            self._cached_raw_constants = raw_constants
+            self._model_to_name = {v: k for k, v in constants.items()}
+        except Exception as e:
+            _LOGGER.warning(f"[sleep_timeline] constants parse error: {e}")
+
+    @staticmethod
+    def _to_hhmm(minutes_since_midnight) -> str:
+        m = int(minutes_since_midnight) % (24 * 60)
+        return f"{m // 60:02d}:{m % 60:02d}"
+
+    def _parse_timeline(self, attr_value) -> list:
+        try:
+            data = json.loads(attr_value) if isinstance(attr_value, str) else attr_value
+            if not isinstance(data, list):
+                return []
+            self._refresh_model_names()
+            result = []
+            for segment in data:
+                model = segment.get("model")
+                start = segment.get("start", 0)
+                stop = segment.get("stop", 0)
+                result.append({
+                    "phase": self._model_to_name.get(model, f"Unknown ({model})"),
+                    "start": self._to_hhmm(start),
+                    "stop": self._to_hhmm(stop),
+                    "duration_min": stop - start,
+                })
+            return result
+        except Exception as e:
+            _LOGGER.warning(f"[sleep_timeline] parse error: {e}")
+            return []
+
+    @callback
+    def _handle_master_update(self, event) -> None:
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        attr_value = new_state.attributes.get("sleep_stage_data")
+        if attr_value is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        self._timeline = self._parse_timeline(attr_value)
+        self._attr_native_value = len(self._timeline)
+        self._attr_available = True
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        master_state = self.hass.states.get(self._master_sensor_id)
+        if master_state:
+            attr_value = master_state.attributes.get("sleep_stage_data")
+            if attr_value is not None:
+                self._timeline = self._parse_timeline(attr_value)
+                self._attr_native_value = len(self._timeline)
+                self._attr_available = True
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"timeline": self._timeline}
 
 
 class PublishedVersionSensor(CoordinatorEntity, SensorEntity):

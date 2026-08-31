@@ -4,6 +4,20 @@ Todos los cambios notables de la integración **HA Companion** para Home Assista
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y el versionado es [SemVer](https://semver.org/lang/es/).
 
+## [0.1.6] - 2026-08-31
+
+### Añadido
+- `sensor.<usuario>_sleep_timeline`: estado = nº de tramos de la última sesión de
+  sueño; atributo `timeline` con la lista de ciclos (fase, hora de inicio/fin y
+  duración en minutos), extraída del mismo `sleep_stage_data` que ya usan los
+  sensores `sleep_*_minutes`.
+- `binary_sensor.<usuario>_is_charging`: infiere si el reloj está cargando a
+  partir del delta de `battery_state` entre actualizaciones consecutivas (Zepp OS
+  no expone un flag nativo de carga).
+- Atributo `last_week` en PAI y Estrés: media/mín/máx diarios de los últimos 7
+  días, leído de las estadísticas propias del recorder de HA (ambos sensores ya
+  llevan `state_class: measurement`, así que HA ya las generaba solo).
+
 ## [0.1.5] - 2026-07-17
 
 ### Añadido

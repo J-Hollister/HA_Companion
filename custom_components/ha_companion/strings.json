@@ -189,6 +189,9 @@
           "in_motion": "In Motion",
           "not_sure": "Not Sure"
         }
+      },
+      "sleep_timeline": {
+        "name": "Sleep Timeline"
       }
     },
     "binary_sensor": {
@@ -233,6 +236,9 @@
       },
       "update_pending": {
         "name": "Update Available"
+      },
+      "is_charging": {
+        "name": "Charging"
       }
     }
   }

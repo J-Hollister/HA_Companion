@@ -192,6 +192,9 @@
           "in_motion": "In Motion",
           "not_sure": "Not Sure"
         }
+      },
+      "sleep_timeline": {
+        "name": "Sleep Timeline"
       }
     },
     "device_tracker": {
@@ -241,6 +244,9 @@
       },
       "update_pending": {
         "name": "Update Available"
+      },
+      "is_charging": {
+        "name": "Charging"
       }
     }
   }
