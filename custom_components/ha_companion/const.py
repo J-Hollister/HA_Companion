@@ -9,6 +9,25 @@ WEAR_STATES = {
     3: "not_sure",
 }
 
+# Human-readable sleep-phase names for the sleep_timeline sensor's `timeline`
+# attribute. This lives inside a nested list, not the entity's own state, so HA's
+# usual strings.json state-translation lookup (see WEAR_STATES above) doesn't reach
+# it — WatchSleepTimelineSensor picks the row keyed by hass.config.language instead.
+SLEEP_PHASE_LABELS = {
+    "es": {
+        "WAKE_STAGE": "Despierto",
+        "REM_STAGE": "REM",
+        "LIGHT_STAGE": "Sueño Ligero",
+        "DEEP_STAGE": "Sueño Profundo",
+    },
+    "en": {
+        "WAKE_STAGE": "Awake",
+        "REM_STAGE": "REM",
+        "LIGHT_STAGE": "Light Sleep",
+        "DEEP_STAGE": "Deep Sleep",
+    },
+}
+
 # Definición de todos los sensores
 SENSORS = [
     {
@@ -255,14 +274,20 @@ SENSORS = [
         "sleep_stage_extract": "WAKE_STAGE"
     },
     {
-        # State = number of segments in the last sleep session; extra_state_attributes.timeline
-        # is the per-cycle breakdown (phase name + start/stop HH:MM + duration_min), built from
-        # the same raw sleep_stage_data ({model, start, stop} minutes-since-midnight) the
-        # sleep_*_minutes sensors above already sum. See WatchSleepTimelineSensor.
+        # State = total minutes of the last sleep session (sum of every segment's
+        # duration_min — a bare segment count meant nothing on a dashboard, confirmed
+        # confusing a real user). extra_state_attributes.timeline is the per-cycle
+        # breakdown (phase name + start/stop HH:MM + duration_min) and segment_count,
+        # built from the same raw sleep_stage_data ({model, start, stop}
+        # minutes-since-midnight) the sleep_*_minutes sensors above already sum.
+        # See WatchSleepTimelineSensor.
         "key": "sleep_timeline",
         "translation_key": "sleep_timeline",
         "attribute": "sleep_stage_data",
         "icon": "mdi:timeline-clock-outline",
+        "unit": "min",
+        "device_class": "duration",
+        "state_class": "measurement",
         "sleep_timeline_extract": True,
     },
     {

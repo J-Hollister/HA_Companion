@@ -7,10 +7,11 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
 ## [0.1.6] - 2026-08-31
 
 ### Añadido
-- `sensor.<usuario>_sleep_timeline`: estado = nº de tramos de la última sesión de
-  sueño; atributo `timeline` con la lista de ciclos (fase, hora de inicio/fin y
-  duración en minutos), extraída del mismo `sleep_stage_data` que ya usan los
-  sensores `sleep_*_minutes`.
+- `sensor.<usuario>_sleep_timeline`: estado = minutos totales de la última sesión
+  de sueño; atributo `timeline` con la lista de ciclos (fase, hora de inicio/fin y
+  duración en minutos) y `segment_count`, extraída del mismo `sleep_stage_data`
+  que ya usan los sensores `sleep_*_minutes`. El nombre de cada fase sale en
+  español o inglés según el idioma de la instancia de HA.
 - `binary_sensor.<usuario>_is_charging`: infiere si el reloj está cargando a
   partir del delta de `battery_state` entre actualizaciones consecutivas (Zepp OS
   no expone un flag nativo de carga).

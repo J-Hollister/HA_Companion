@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import statistics_during_period
 
-from .const import DOMAIN, SENSORS
+from .const import DOMAIN, SENSORS, SLEEP_PHASE_LABELS
 
 TREND_REFRESH_INTERVAL = timedelta(hours=6)
 TREND_DAYS = 7
@@ -438,10 +438,12 @@ class WatchWorkoutHistorySensor(WatchSensor):
 
 
 class WatchSleepTimelineSensor(WatchSensor):
-    """Sensor whose state is the number of sleep-stage segments in the last session;
-    extra_state_attributes.timeline lists each segment (phase name + start/stop HH:MM
-    + duration_min), built from the same raw sleep_stage_data the sleep_*_minutes
-    sensors already sum — no watch-side change needed."""
+    """Sensor whose state is the total minutes of the last sleep session (sum of every
+    segment's duration_min — a bare segment count meant nothing on a dashboard, a real
+    user confirmed it was confusing). extra_state_attributes.timeline lists each
+    segment (phase name + start/stop HH:MM + duration_min) plus segment_count, built
+    from the same raw sleep_stage_data the sleep_*_minutes sensors already sum — no
+    watch-side change needed."""
 
     def __init__(self, hass, entry_id, username, master_sensor_id, sensor_config):
         super().__init__(hass, entry_id, username, master_sensor_id, sensor_config)
@@ -472,6 +474,14 @@ class WatchSleepTimelineSensor(WatchSensor):
         m = int(minutes_since_midnight) % (24 * 60)
         return f"{m // 60:02d}:{m % 60:02d}"
 
+    def _phase_label(self, stage_name: str) -> str:
+        """Localize a raw stage constant name (WAKE_STAGE, ...) to the instance's
+        configured language. Falls back to English, then to the raw name itself for
+        anything not in SLEEP_PHASE_LABELS (e.g. the "Unknown (N)" placeholder)."""
+        lang = str(self.hass.config.language or "en").lower()
+        table = SLEEP_PHASE_LABELS.get("es" if lang.startswith("es") else "en", SLEEP_PHASE_LABELS["en"])
+        return table.get(stage_name, stage_name)
+
     def _parse_timeline(self, attr_value) -> list:
         try:
             data = json.loads(attr_value) if isinstance(attr_value, str) else attr_value
@@ -483,8 +493,9 @@ class WatchSleepTimelineSensor(WatchSensor):
                 model = segment.get("model")
                 start = segment.get("start", 0)
                 stop = segment.get("stop", 0)
+                stage_name = self._model_to_name.get(model, f"Unknown ({model})")
                 result.append({
-                    "phase": self._model_to_name.get(model, f"Unknown ({model})"),
+                    "phase": self._phase_label(stage_name),
                     "start": self._to_hhmm(start),
                     "stop": self._to_hhmm(stop),
                     "duration_min": stop - start,
@@ -507,7 +518,7 @@ class WatchSleepTimelineSensor(WatchSensor):
             self.async_write_ha_state()
             return
         self._timeline = self._parse_timeline(attr_value)
-        self._attr_native_value = len(self._timeline)
+        self._attr_native_value = self._total_minutes()
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -518,12 +529,15 @@ class WatchSleepTimelineSensor(WatchSensor):
             attr_value = master_state.attributes.get("sleep_stage_data")
             if attr_value is not None:
                 self._timeline = self._parse_timeline(attr_value)
-                self._attr_native_value = len(self._timeline)
+                self._attr_native_value = self._total_minutes()
                 self._attr_available = True
+
+    def _total_minutes(self) -> int:
+        return sum(segment["duration_min"] for segment in self._timeline)
 
     @property
     def extra_state_attributes(self) -> dict:
-        return {"timeline": self._timeline}
+        return {"timeline": self._timeline, "segment_count": len(self._timeline)}
 
 
 class PublishedVersionSensor(CoordinatorEntity, SensorEntity):
