@@ -3,7 +3,7 @@
 
 ## ¿Qué puede hacer esta Integracion HA Companion?
 
-«HA Companion» es un componente para [Home Assistant](https://home-assistant.io/) que permite obtener y ordenar los datos de salud en tu instalación de Home Assistant de tu smartwatch Amazfit/Zepp con la aplicación HA Companion instalada,  visualizando más de 40 métricas de salud, actividad, sueño y estado del dispositivo.
+«HA Companion» es un componente para [Home Assistant](https://home-assistant.io/) que permite obtener y ordenar los datos de salud en tu instalación de Home Assistant de tu smartwatch Amazfit/Zepp con la aplicación HA Companion instalada,  visualizando más de 40 métricas de salud, actividad, sueño y estado del dispositivo. Incluye además un **panel propio en la barra lateral**, **tres tarjetas de Lovelace** listas para usar y **disparadores de automatización** basados en lo que sabe tu reloj (te has dormido, te lo has quitado, se ha puesto a cargar...).
 
 ---
 
@@ -56,6 +56,30 @@ Una vez configurado, tendras la integracion con todos los sensores de tu reloj, 
 
 ---
 
+## 📊 Panel y tarjetas
+
+La integración registra sola una nueva entrada en la barra lateral, **`/ha-companion`**, con todo lo que manda el reloj: estado y datos personales, contadores del día con aro de progreso, acumulado de la semana, medidas del momento, sueño, deporte, información del reloj y sus modos. Cada ficha se puede pulsar y abre el historial de esa entidad; con varios relojes aparece un desplegable.
+
+También sirve tres tarjetas de Lovelace, sin instalar nada aparte ni dar de alta recursos a mano:
+
+| Tarjeta | Qué muestra |
+|---|---|
+| `ha-companion-sleep-card` | Hipnograma de la última noche, un carril por fase con minutos y porcentaje |
+| `ha-companion-sleep-week-card` | Las últimas noches apiladas por fase |
+| `ha-companion-workout-card` | Entrenamientos colocados a su hora real sobre un eje de 24 horas |
+
+Detalles y opciones de configuración de cada tarjeta en [`TARJETAS.md`](custom_components/ha_companion/TARJETAS.md).
+
+---
+
+## 🤖 Automatizar con el reloj
+
+El reloj sabe cosas que ningún sensor de la casa puede saber por sí solo: que te has dormido, que te has despertado, que te lo has quitado. Están disponibles como **disparadores de dispositivo** (_Ajustes → Automatizaciones → Disparador → Dispositivo_, eligiendo el reloj), sin necesidad de saberse ningún `entity_id`. Solo aparecen los disparadores que ese reloj puede dar.
+
+Incluye 11 disparadores (dormido/despierto, en movimiento/parado, puesto/quitado, cargando, batería baja, actualización disponible, reloj sin sincronizar...) y **tres blueprints** listos para usar en `blueprints/automation/ha_companion/`: apagar la casa al dormirse, actuar al despertar y avisar si el reloj deja de sincronizar.
+
+---
+
 ## Sensores disponibles
 
 Una vez configurado, tendrás un dispositivo con los sensores organizados en las siguientes categorías:
@@ -87,6 +111,7 @@ Una vez configurado, tendrás un dispositivo con los sensores organizados en las
 | Tiempo Despierto | Tiempo despierto durante la noche |
 | Hora de Dormir | Hora en que se inició el sueño |
 | Hora de Despertar | Hora en que se detectó el despertar |
+| Cronología del Sueño | Ciclos de la última noche por tramo (fase, inicio/fin, duración), en el atributo `timeline` |
 
 ### 🏃 Actividad
 
@@ -128,6 +153,8 @@ Una vez configurado, tendrás un dispositivo con los sensores organizados en las
 | Modo Teatro | Indica si el modo teatro está activado |
 | No Molestar | Indica si el modo No Molestar está activo |
 | Versión del Firmware | Versión actual del firmware del reloj |
+| Cargando | Deducido del cambio de batería entre envíos (Zepp OS no da un indicador nativo) |
+| Desde la Última Sincronización | Minutos desde el último envío del reloj, con `is_stale` si se retrasa |
 
 ### 🔧 Diagnóstico
 
@@ -143,3 +170,5 @@ Una vez configurado, tendrás un dispositivo con los sensores organizados en las
 | Objetivo de Calorías | Meta de calorías configurada |
 | Objetivo Horas de Pie | Meta de horas de pie configurada |
 | Objetivo Quema de Grasa | Meta de quema de grasa configurada |
+
+> **Atributos extra sin sensor propio:** PAI y Estrés llevan un atributo `last_week` con la media/mín/máx diaria de los últimos 7 días; Pasos, Calorías, Distancia, Quema de Grasa y Horas de Pie llevan `week_days`, `week_total`, `week_average` y `week_best` con el acumulado de la semana. Ambos se calculan de las estadísticas que ya genera el propio recorder de Home Assistant, sin configuración adicional.
