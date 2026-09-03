@@ -379,6 +379,12 @@ en vez de romperse**.
 
 Para añadir otro idioma basta con otra clave junto a `"es"`.
 
+**La tabla de Zepp siempre irá por detrás del reloj.** Cada actualización del
+firmware puede traer deportes nuevos: apareció un entrenamiento con el código
+1215 (pasear al perro) cuando la tabla acababa en 1203. Un código desconocido no
+es un fallo, es lo normal, y se muestra como «Deporte 1215» conservando el
+número — que es justo lo que hace falta para añadirlo a `SPORT_TYPES` luego.
+
 ---
 
 ## Sensor de sincronización (`sync_age`)

@@ -67,6 +67,12 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   mostraba *Walking* y *Pool Swimming*. Añadido `SPORT_TYPE_LABELS` con los 181
   deportes, con la misma mecánica que `SLEEP_PHASE_LABELS`: lo que no esté en la
   tabla se queda en inglés en vez de romperse.
+- **Un deporte sin nombre ya no sale como «Unknown».** La tabla de Zepp se queda
+  corta con cada actualización del reloj: un entrenamiento real llegó con el
+  código 1215 (pasear al perro) cuando la tabla acababa en 1203. Añadido ese
+  código, y los que falten muestran ahora «Deporte 1215» en lugar de
+  «Unknown (1215)» —conservando el número, que es lo que permite añadirlos
+  después.
 - **Las fechas del historial de entrenamientos.** `start` llega como epoch en
   milisegundos y se pasaba a `datetime.fromisoformat()`, que espera texto ISO:
   fallaba en nueve de cada diez entradas y dejaba el número crudo, y en la décima

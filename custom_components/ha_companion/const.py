@@ -824,6 +824,10 @@ SPORT_TYPES = {
     1201: "Surfing (identify number of trips)",
     1202: "Kitesurfing (Identification Gliding)", 
     1203: "Ultra Marathon",
+    # Zepp sigue añadiendo deportes en las actualizaciones del reloj y la tabla
+    # se queda corta: 1215 llegó desde un entrenamiento real y salía como
+    # "Unknown (1215)". Si aparece otro código sin nombre, es esto.
+    1215: "Walking the Dog",
 }
 
 # Nombres de deporte en español. SPORT_TYPES viene del SDK de Zepp y está en
@@ -1004,6 +1008,7 @@ SPORT_TYPE_LABELS = {
         "Volleyball": "Voleibol",
         "Wakewave Surfing": "Wakesurf",
         "Walking": "Caminar",
+        "Walking the Dog": "Pasear al perro",
         "Walking Machine": "Cinta de caminar",
         "Water Polo": "Waterpolo",
         "Water Ski": "Esquí acuático",

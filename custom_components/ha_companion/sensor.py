@@ -218,12 +218,34 @@ class WatchSensor(SensorEntity):
         elif self._config.get("lookup_table"):
             table = self._config["lookup_table"]
             try:
-                return self._sport_label(table.get(int(attr_value), f"Unknown ({attr_value})"))
+                # La única lookup_table que existe es la de deportes; si algún
+                # día hay otra, esto tendrá que mirar la clave del sensor.
+                return self._sport_name(attr_value)
             except (TypeError, ValueError):
                 return str(attr_value)
 
         else:
             return attr_value
+
+    def _sport_name(self, sport_id) -> str:
+        """Code -> localized sport name, with a readable fallback.
+
+        Zepp keeps adding sports in watch firmware updates, so SPORT_TYPES will
+        always lag behind: a real workout came back as 1215 (walking the dog)
+        with the table ending at 1203. An unknown code is normal, not a bug, so
+        it gets a sensible localized name that still carries the number — the
+        number is what lets us add it to the table later.
+        """
+        from .const import SPORT_TYPES
+        try:
+            code = int(sport_id)
+        except (TypeError, ValueError):
+            return "Unknown"
+        nombre = SPORT_TYPES.get(code)
+        if nombre is not None:
+            return self._sport_label(nombre)
+        lang = str(self.hass.config.language or "en").lower()
+        return f"Deporte {code}" if lang.startswith("es") else f"Sport {code}"
 
     def _sport_label(self, nombre: str) -> str:
         """Localize a sport name to the instance's language.
@@ -503,9 +525,7 @@ class WatchWorkoutHistorySensor(WatchSensor):
             self._workouts = []
             for w in data[:10]:
                 sport_id = w.get("sport_type")
-                sport_name = self._sport_label(
-                    SPORT_TYPES.get(int(sport_id), f"Unknown ({sport_id})")
-                ) if sport_id else "Unknown"
+                sport_name = self._sport_name(sport_id) if sport_id else "Unknown"
                 start_ts = w.get("start")
                 dt = self._local_dt(start_ts)
                 date_str = dt.strftime("%d/%m %H:%M") if dt else str(start_ts)
