@@ -69,6 +69,9 @@ También sirve tres tarjetas de Lovelace, sin instalar nada aparte ni dar de alt
 | `ha-companion-workout-card` | Entrenamientos colocados a su hora real sobre un eje de 24 horas |
 
 Detalles y opciones de configuración de cada tarjeta en [`TARJETAS.md`](custom_components/ha_companion/TARJETAS.md).
+<img width="1100" height="1263" alt="image" src="https://github.com/user-attachments/assets/ed9cbca8-7a9d-4fdc-8380-17120873049a" />
+
+<img width="681" height="656" alt="image" src="https://github.com/user-attachments/assets/6bd8bdfd-ec7b-4b59-a681-39d7a7cbdb13" />
 
 ---
 
