@@ -1,0 +1,40 @@
+blueprint:
+  name: HA Companion · Cuando me duermo
+  description: >
+    Ejecuta lo que quieras en cuanto el reloj detecte que te has dormido.
+
+    El reloj lo sabe antes que cualquier sensor de presencia, porque va en tu
+    muñeca. Lleva una espera de confirmación para no dispararse con una cabezada
+    de dos minutos en el sofá.
+  domain: automation
+  author: HA Companion
+  input:
+    reloj:
+      name: Reloj
+      description: El reloj que detecta el sueño.
+      selector:
+        device:
+          integration: ha_companion
+    confirmacion:
+      name: Espera de confirmación
+      description: Cuánto tiene que llevar dormido antes de actuar.
+      default:
+        minutes: 10
+      selector:
+        duration: {}
+    accion:
+      name: Qué hacer
+      description: Apagar luces, bajar persianas, activar la alarma...
+      selector:
+        action: {}
+
+mode: single
+
+triggers:
+  - trigger: device
+    domain: ha_companion
+    device_id: !input reloj
+    type: fell_asleep
+    for: !input confirmacion
+
+actions: !input accion

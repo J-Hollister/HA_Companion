@@ -241,5 +241,20 @@
         "name": "Charging"
       }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "fell_asleep": "{entity_name} detected I fell asleep",
+      "woke_up": "{entity_name} detected I woke up",
+      "started_moving": "{entity_name} detected I started moving",
+      "stopped_moving": "{entity_name} detected I stopped moving",
+      "charging_started": "{entity_name} started charging",
+      "charging_stopped": "{entity_name} stopped charging",
+      "watch_worn": "{entity_name} was put on",
+      "watch_removed": "{entity_name} was taken off",
+      "update_available": "{entity_name} has an update available",
+      "battery_low": "{entity_name} is running out of battery",
+      "sync_lost": "{entity_name} has not synced for too long"
+    }
   }
 }

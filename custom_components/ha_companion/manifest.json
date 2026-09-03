@@ -9,5 +9,9 @@
     "issue_tracker": "https://github.com/AguacatecHA/HA_Companion/issues",
     "codeowners": ["@J-Hollister"],
     "config_flow": true,
-    "iot_class": "local_push"
+    "iot_class": "local_push",
+    "dependencies": [
+      "frontend",
+      "http"
+    ]
   }
