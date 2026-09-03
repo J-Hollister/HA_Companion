@@ -1,24 +1,87 @@
 """Watch Sensors Pro Integration."""
 from __future__ import annotations
+import contextlib
 import logging
+import os
 from datetime import timedelta
 
 import aiohttp
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import frontend
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import label_registry as lr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "ha_companion"
 
+# Tarjeta Lovelace que sirve la propia integración: no hace falta que nadie
+# la descargue aparte ni la dé de alta como recurso a mano.
+CARD_STATIC_URL = "/ha_companion_static"
+CARD_DIR = "custom_components/ha_companion/www"
+CARDS = (
+    "ha-companion-sleep-card.js",
+    "ha-companion-sleep-week-card.js",
+    "ha-companion-workout-card.js",
+)
+
+# Panel propio en la barra lateral, al estilo de lo que hace WashData.
+PANEL_JS = "ha-companion-panel.js"
+PANEL_ELEMENT = "ha-companion-panel"
+PANEL_URL_PATH = "ha-companion"
+
+
+def _version(hass: HomeAssistant) -> str:
+    """La versión del manifest, para enseñarla en la cabecera del panel."""
+    try:
+        import json
+        ruta = hass.config.path("custom_components/ha_companion/manifest.json")
+        with open(ruta, encoding="utf-8") as f:
+            return json.load(f).get("version", "")
+    except Exception:  # pylint: disable=broad-exception-caught
+        return ""
+
+
+def _card_token(hass: HomeAssistant, filename: str) -> str:
+    """Cache-busting token derived from a card file's mtime.
+
+    The static path is served without a Cache-Control header, so browsers fall
+    back to heuristic caching: with a fixed ?v= they can keep serving a stale
+    copy of the card indefinitely. Keying the query string to the file's mtime
+    means every edit produces a URL the browser has never seen.
+    """
+    try:
+        return str(int(os.path.getmtime(hass.config.path(f"{CARD_DIR}/{filename}"))))
+    except OSError:
+        return "0"
+
 VERSION_JSON_URL = (
     "https://raw.githubusercontent.com/AguacatecHA/HA_Companion/main/version.json"
 )
 VERSION_UPDATE_INTERVAL = timedelta(hours=1)
+
+# El reloj escribe el sensor maestro por la API REST de Home Assistant, y los
+# estados puestos así NO se restauran al reiniciar: se pierde el estado y, con
+# él, TODOS los atributos de los que cuelgan los sensores derivados. Resultado:
+# tras cada reinicio la integración entera queda `unavailable` hasta que el
+# reloj vuelva a sincronizar, que puede tardar horas. Además, mientras tanto el
+# recorder anota ceros que luego ensucian las estadísticas.
+#
+# Guardamos el último envío en disco y lo reponemos al arrancar. El reloj lo
+# pisará en cuanto sincronice.
+CACHE_VERSION = 1
+CACHE_DELAY = 20          # segundos de espera antes de escribir, para no
+                          # castigar el disco en cada envío del reloj
+
+
+def _cache_key(username: str) -> str:
+    return f"{DOMAIN}.master.{username}"
 
 
 class VersionCoordinator(DataUpdateCoordinator):
@@ -103,6 +166,68 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HA Companion from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    # Serve + register the bundled Lovelace cards once per HA instance.
+    if not hass.data[DOMAIN].get("card_registered"):
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    CARD_STATIC_URL,
+                    hass.config.path(CARD_DIR),
+                    cache_headers=False,
+                )
+            ]
+        )
+        for filename in CARDS:
+            url = f"{CARD_STATIC_URL}/{filename}?v={_card_token(hass, filename)}"
+            add_extra_js_url(hass, url)
+            _LOGGER.debug("Registered Lovelace card at %s", url)
+        hass.data[DOMAIN]["card_registered"] = True
+
+    # Panel de la barra lateral. Va aparte de las tarjetas: si el registro del
+    # panel fallara, las tarjetas deben seguir funcionando igualmente.
+    #
+    # A diferencia de las tarjetas, el panel se REGISTRA DE NUEVO en cada setup.
+    # Su module_url lleva el token de caché, que se calcula aquí: si nos
+    # limitásemos a saltar cuando ya existe, un panel actualizado seguiría
+    # sirviéndose con la URL vieja hasta el siguiente reinicio completo. Así
+    # basta con recargar la integración.
+    if True:
+        try:
+            with contextlib.suppress(Exception):
+                frontend.async_remove_panel(hass, PANEL_URL_PATH)
+            # ha-panel-custom.ts del frontend lee los parámetros de carga de
+            # `config._panel_custom`; las claves sueltas del primer nivel NO se
+            # miran. El panel es un módulo más de www/, así que se sirve por la
+            # misma ruta estática que las tarjetas.
+            frontend.async_register_built_in_panel(
+                hass,
+                component_name="custom",
+                sidebar_title="HA Companion",
+                sidebar_icon="mdi:watch",
+                frontend_url_path=PANEL_URL_PATH,
+                config={
+                    "_panel_custom": {
+                        "name": PANEL_ELEMENT,
+                        "module_url": f"{CARD_STATIC_URL}/{PANEL_JS}"
+                                      f"?v={_card_token(hass, PANEL_JS)}",
+                        "embed_iframe": False,
+                        "trust_external": False,
+                    },
+                    # Cualquier clave suelta de `config` llega al panel en su
+                    # propiedad `panel`. La versión no la sabe de otro modo: el
+                    # manifest no se sirve al frontend.
+                    "version": _version(hass),
+                },
+                require_admin=False,
+            )
+            hass.data[DOMAIN]["panel_registered"] = True
+            _LOGGER.debug("Registered sidebar panel at /%s", PANEL_URL_PATH)
+        except ValueError:
+            # Ya estaba registrado (recarga de la integración): no es un error.
+            hass.data[DOMAIN]["panel_registered"] = True
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            _LOGGER.warning("Could not register the sidebar panel: %s", exc)
+
     # Register the areas REST bridge once per HA instance.
     if not hass.data[DOMAIN].get("areas_view_registered"):
         hass.http.register_view(HACompanionAreasView())
@@ -121,16 +246,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = entry.data
 
-    # Create the master sensor if the watch hasn't sent data yet
+    # Create the master sensor if the watch hasn't sent data yet, restoring the
+    # last payload the watch sent so a restart does not blank every sensor.
     username = entry.data["username"]
     master_sensor_id = f"sensor.{username}"
+    store: Store = Store(hass, CACHE_VERSION, _cache_key(username))
+
     if hass.states.get(master_sensor_id) is None:
-        hass.states.async_set(
-            master_sensor_id,
-            "unknown",
-            {"friendly_name": f"{username.capitalize()} Watch", "unit_of_measurement": "%"},
+        guardado = await store.async_load()
+        if guardado and guardado.get("attributes"):
+            hass.states.async_set(
+                master_sensor_id,
+                guardado.get("state", "unknown"),
+                guardado["attributes"],
+            )
+            _LOGGER.info(
+                "Restored master sensor %s from the last watch payload",
+                master_sensor_id,
+            )
+        else:
+            hass.states.async_set(
+                master_sensor_id,
+                "unknown",
+                {"friendly_name": f"{username.capitalize()} Watch", "unit_of_measurement": "%"},
+            )
+            _LOGGER.info(f"Created placeholder master sensor: {master_sensor_id}")
+
+    @callback
+    def _guardar(event) -> None:
+        """Persist every payload the watch pushes, with a delay so a burst of
+        updates becomes a single write."""
+        nuevo_estado = event.data.get("new_state")
+        if nuevo_estado is None or nuevo_estado.state in ("unknown", "unavailable"):
+            return
+        # Sin `sleep_stage_data` ni `steps_state` esto es el marcador vacío, no
+        # un envío de verdad: guardarlo pisaría la copia buena.
+        if not any(k in nuevo_estado.attributes
+                   for k in ("sleep_stage_data", "steps_state", "battery_state")):
+            return
+        store.async_delay_save(
+            lambda: {
+                "state": nuevo_estado.state,
+                "attributes": dict(nuevo_estado.attributes),
+            },
+            CACHE_DELAY,
         )
-        _LOGGER.info(f"Created placeholder master sensor: {master_sensor_id}")
+
+    entry.async_on_unload(
+        async_track_state_change_event(hass, [master_sensor_id], _guardar)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, ["sensor", "binary_sensor", "device_tracker"])
     return True

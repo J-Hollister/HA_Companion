@@ -9,6 +9,25 @@ WEAR_STATES = {
     3: "not_sure",
 }
 
+# Human-readable sleep-phase names for the sleep_timeline sensor's `timeline`
+# attribute. This lives inside a nested list, not the entity's own state, so HA's
+# usual strings.json state-translation lookup (see WEAR_STATES above) doesn't reach
+# it — WatchSleepTimelineSensor picks the row keyed by hass.config.language instead.
+SLEEP_PHASE_LABELS = {
+    "es": {
+        "WAKE_STAGE": "Despierto",
+        "REM_STAGE": "REM",
+        "LIGHT_STAGE": "Sueño Ligero",
+        "DEEP_STAGE": "Sueño Profundo",
+    },
+    "en": {
+        "WAKE_STAGE": "Awake",
+        "REM_STAGE": "REM",
+        "LIGHT_STAGE": "Light Sleep",
+        "DEEP_STAGE": "Deep Sleep",
+    },
+}
+
 # Definición de todos los sensores
 SENSORS = [
     {
@@ -26,7 +45,11 @@ SENSORS = [
         "attribute": "steps_state",
         "unit": "steps",
         "icon": "mdi:walk",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
+        # Acumulado de 7 días en extra_state_attributes: week_days (total por
+        # día), week_total, week_average y week_best. Sale de las estadísticas
+        # del recorder, que ya existen por el state_class de arriba.
+        "week_extract": True
     },
     {
         "key": "steps_target",
@@ -80,7 +103,11 @@ SENSORS = [
         "attribute": "calorie_state",
         "unit": "kcal",
         "icon": "mdi:fire",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
+        # Acumulado de 7 días en extra_state_attributes: week_days (total por
+        # día), week_total, week_average y week_best. Sale de las estadísticas
+        # del recorder, que ya existen por el state_class de arriba.
+        "week_extract": True
     },
     {
         "key": "calories_target",
@@ -98,7 +125,11 @@ SENSORS = [
         "unit": "m",
         "device_class": "distance",
         "icon": "mdi:map-marker-distance",
-        "state_class": "total_increasing"
+        "state_class": "total_increasing",
+        # Acumulado de 7 días en extra_state_attributes: week_days (total por
+        # día), week_total, week_average y week_best. Sale de las estadísticas
+        # del recorder, que ya existen por el state_class de arriba.
+        "week_extract": True
     },
     {
         "key": "stand_hours",
@@ -106,7 +137,11 @@ SENSORS = [
         "attribute": "stand_state",
         "unit": "h",
         "icon": "mdi:human",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        # Acumulado de 7 días en extra_state_attributes: week_days (total por
+        # día), week_total, week_average y week_best. Sale de las estadísticas
+        # del recorder, que ya existen por el state_class de arriba.
+        "week_extract": True
     },
     {
         "key": "stand_hours_target",
@@ -123,7 +158,11 @@ SENSORS = [
         "attribute": "fat_burning_state",
         "unit": "min",
         "icon": "mdi:fire-circle",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        # Acumulado de 7 días en extra_state_attributes: week_days (total por
+        # día), week_total, week_average y week_best. Sale de las estadísticas
+        # del recorder, que ya existen por el state_class de arriba.
+        "week_extract": True
     },
     {
         "key": "fat_burning_target",
@@ -140,7 +179,9 @@ SENSORS = [
         "attribute": "pai_state",
         "unit": "PAI",
         "icon": "mdi:chart-line",
-        "state_class": "measurement"
+        "state_class": "measurement",
+        # 7-day daily mean/min/max in extra_state_attributes.last_week (see stress above).
+        "trend_extract": True
     },
     {
         "key": "pai_total",
@@ -253,11 +294,32 @@ SENSORS = [
         "sleep_stage_extract": "WAKE_STAGE"
     },
     {
+        # State = total minutes of the last sleep session (sum of every segment's
+        # duration_min — a bare segment count meant nothing on a dashboard, confirmed
+        # confusing a real user). extra_state_attributes.timeline is the per-cycle
+        # breakdown (phase name + start/stop HH:MM + duration_min) and segment_count,
+        # built from the same raw sleep_stage_data ({model, start, stop}
+        # minutes-since-midnight) the sleep_*_minutes sensors above already sum.
+        # See WatchSleepTimelineSensor.
+        "key": "sleep_timeline",
+        "translation_key": "sleep_timeline",
+        "attribute": "sleep_stage_data",
+        "icon": "mdi:timeline-clock-outline",
+        "unit": "min",
+        "device_class": "duration",
+        "state_class": "measurement",
+        "sleep_timeline_extract": True,
+    },
+    {
         "key": "stress",
         "attribute": "stress_state",
         "icon": "mdi:emoticon-happy",
         "state_class": "measurement",
-        "json_extract": "value"
+        "json_extract": "value",
+        # 7-day daily mean/min/max in extra_state_attributes.last_week, from HA's own
+        # recorder statistics (this sensor already has state_class: measurement, so HA
+        # records daily long-term stats for it automatically — no watch-side change).
+        "trend_extract": True
     },
     {
         "key": "wear",
@@ -402,6 +464,22 @@ SENSORS = [
         "iso_timestamp": True
     },
     {
+        "key": "sync_age",
+        "translation_key": "Sync Age",
+        # Se calcula a partir de record_time, no de un atributo propio: el reloj
+        # no manda "cuánto hace", manda "cuándo fue".
+        "attribute": "record_time",
+        "unit": "min",
+        "icon": "mdi:sync-alert",
+        "state_class": "measurement",
+        # Este sensor se recalcula solo cada minuto. Todos los demás son pasivos
+        # y solo cambian cuando el reloj envía, así que una app parada pasaba
+        # inadvertida: el panel seguía enseñando los datos de la mañana como si
+        # fueran de ahora. Aquí el número crece cuando el reloj calla.
+        "sync_age_extract": True,
+        "stale_after_minutes": 60
+    },
+    {
         "key": "update_source",
         "translation_key": "update_source",
         "attribute": "update_source",
@@ -464,8 +542,19 @@ SENSORS = [
 ]
 
 BINARY_SENSORS = [
-    { 
-        "key": "system_mode_dnd", 
+    {
+        # Zepp OS has no native "is charging" flag (checked: the Battery sensor only
+        # exposes getCurrent()), so this is inferred from the battery_state delta
+        # between consecutive master-sensor updates. See WatchChargingBinarySensor.
+        "key": "is_charging",
+        "translation_key": "is_charging",
+        "attribute": "battery_state",
+        "icon": "mdi:battery-charging",
+        "device_class": "battery_charging",
+        "charging_extract": True,
+    },
+    {
+        "key": "system_mode_dnd",
         "translation_key": "system_mode_dnd", 
         "attribute": "system_mode_dnd", 
         "icon": "mdi:minus-circle", 
@@ -735,6 +824,194 @@ SPORT_TYPES = {
     1201: "Surfing (identify number of trips)",
     1202: "Kitesurfing (Identification Gliding)", 
     1203: "Ultra Marathon",
+}
+
+# Nombres de deporte en español. SPORT_TYPES viene del SDK de Zepp y está en
+# inglés; esto lo traduce igual que SLEEP_PHASE_LABELS hace con las fases del
+# sueño. Lo que no esté aquí se queda en inglés en vez de romperse.
+SPORT_TYPE_LABELS = {
+    "es": {
+        "ATV": "Quad",
+        "Alpine Skiing": "Esquí alpino",
+        "Archery": "Tiro con arco",
+        "BMX": "BMX",
+        "Badminton": "Bádminton",
+        "Ballet": "Ballet",
+        "Ballroom Dance": "Baile de salón",
+        "Baseball": "Béisbol",
+        "Basketball": "Baloncesto",
+        "Battle Rope": "Cuerda de batalla",
+        "Beach Football": "Fútbol playa",
+        "Beach Volleyball": "Vóley playa",
+        "Belly Dance": "Danza del vientre",
+        "Bicycle": "Bicicleta",
+        "Billiards": "Billar",
+        "Board Game": "Juego de mesa",
+        "Bocce": "Petanca",
+        "Bouldering": "Búlder",
+        "Bowling": "Bolos",
+        "Boxing": "Boxeo",
+        "Break Dance": "Breakdance",
+        "Bridge": "Bridge",
+        "Bungee Jumping": "Puenting",
+        "Checkers": "Damas",
+        "Chess": "Ajedrez",
+        "Climb the Stairs": "Subir escaleras",
+        "Climber": "Escalador",
+        "Combat Exercise": "Ejercicio de combate",
+        "Compound Motion": "Movimiento compuesto",
+        "Core Training": "Entrenamiento de core",
+        "Cricket": "Críquet",
+        "Cross Country Running": "Campo a través",
+        "Cross-Country Skiing": "Esquí de fondo",
+        "Cross-training": "Entrenamiento cruzado",
+        "Curling": "Curling",
+        "Dance": "Baile",
+        "Dart": "Dardos",
+        "Disco": "Disco",
+        "Dodgeball": "Balón prisionero",
+        "Downhill": "Descenso",
+        "Dragon Boat": "Barco dragón",
+        "Drifting": "Drifting",
+        "Driving": "Conducir",
+        "Electronic Sports": "Deportes electrónicos",
+        "Elliptical Machine": "Elíptica",
+        "Equestrian Sports": "Hípica",
+        "Fencing": "Esgrima",
+        "Fin Swimming": "Natación con aletas",
+        "Fishing": "Pesca",
+        "Fishing (Number of Fishes)": "Pesca (número de capturas)",
+        "Fishing and Hunting": "Pesca y caza",
+        "Fitness": "Fitness",
+        "Flexibility Training": "Entrenamiento de flexibilidad",
+        "Floor Ball": "Floorball",
+        "Flying a Kite": "Volar cometa",
+        "Folk Dance": "Danza folclórica",
+        "Football": "Fútbol",
+        "Football (without GPS)": "Fútbol (sin GPS)",
+        "Free Fighting": "Combate libre",
+        "Free Training": "Entrenamiento libre",
+        "Frisbee": "Frisbee",
+        "Gateball": "Gateball",
+        "Go": "Go",
+        "Golf": "Golf",
+        "Golf Swing": "Swing de golf",
+        "Group Exercise": "Ejercicio en grupo",
+        "Gymnastics": "Gimnasia",
+        "HIIT": "HIIT",
+        "Handball": "Balonmano",
+        "Hip Hop Dance": "Baile hip hop",
+        "Hockey": "Hockey",
+        "Horizontal Bar": "Barra fija",
+        "Hula Hoop": "Hula hoop",
+        "Hunting": "Caza",
+        "Ice Hockey": "Hockey sobre hielo",
+        "Indoor Fitness": "Fitness en interior",
+        "Indoor Football": "Fútbol sala",
+        "Indoor Freediving": "Apnea en interior",
+        "Indoor Riding": "Ciclismo en interior",
+        "Indoor Rock Climbing": "Escalada en interior",
+        "Indoor Skating": "Patinaje en interior",
+        "Indoor Surfing": "Surf en interior",
+        "Indoor Walking": "Caminar en interior",
+        "Ironman Triathlon": "Triatlón Ironman",
+        "Jazz Dance": "Danza jazz",
+        "Jiu-Jitsu": "Jiu-jitsu",
+        "Judo": "Judo",
+        "Jump Rope": "Comba",
+        "Karate": "Kárate",
+        "Kayaking": "Kayak",
+        "Kicking Shuttlecock": "Peteca",
+        "Kitesurfing": "Kitesurf",
+        "Kitesurfing (Identification Gliding)": "Kitesurf (planeo)",
+        "Latin Dance": "Baile latino",
+        "Martial Arts": "Artes marciales",
+        "Mixed Aerobic": "Aeróbico mixto",
+        "Modern Dance": "Danza moderna",
+        "Motorboat": "Lancha motora",
+        "Mountain Cycling": "Ciclismo de montaña",
+        "Mountaineering": "Montañismo",
+        "Mountaineering and Skiing": "Esquí de montaña",
+        "Muay Thai": "Muay thai",
+        "Off-Road Motorcycle": "Motocross",
+        "One Minute Sit-ups": "Abdominales en un minuto",
+        "One Minute Skipping Rope": "Comba en un minuto",
+        "Open Water Swimming": "Natación en aguas abiertas",
+        "Orienteering": "Orientación",
+        "Outdoor Boating": "Navegación al aire libre",
+        "Outdoor Cycling": "Ciclismo al aire libre",
+        "Outdoor Freediving": "Apnea al aire libre",
+        "Outdoor Hiking": "Senderismo",
+        "Outdoor Running": "Correr al aire libre",
+        "Outdoor Skating": "Patinaje al aire libre",
+        "Paddleboarding": "Pádel surf",
+        "Paragliding": "Parapente",
+        "Parallel Bars": "Barras paralelas",
+        "Parkour": "Parkour",
+        "Pilates": "Pilates",
+        "Ping Pong": "Tenis de mesa",
+        "Playground Running": "Correr en pista",
+        "Pole Dance": "Pole dance",
+        "Polo": "Polo",
+        "Pool Swimming": "Natación en piscina",
+        "Pull Back the Ball": "Recogida de balón",
+        "Race Walking": "Marcha atlética",
+        "Racquetball": "Racquetball",
+        "Rock Climbing": "Escalada en roca",
+        "Roller Skating": "Patinaje sobre ruedas",
+        "Rowing": "Remo",
+        "Rowing Machine": "Remo en máquina",
+        "Rugby": "Rugby",
+        "Sailing": "Vela",
+        "Sandbag Ball": "Balón de arena",
+        "Sepak Takraw": "Sepak takraw",
+        "Shooting": "Tiro",
+        "Shuffleboard": "Shuffleboard",
+        "Shuttlecock": "Volante",
+        "Simple Tennis": "Tenis sencillo",
+        "Skateboard": "Monopatín",
+        "Skiing": "Esquí",
+        "Skydiving": "Paracaidismo",
+        "Sled": "Trineo",
+        "Snorkeling": "Buceo con tubo",
+        "Snowboarding": "Snowboard",
+        "Snowmobile": "Moto de nieve",
+        "Snowshoe Hiking": "Raquetas de nieve",
+        "Softball": "Sóftbol",
+        "Somatosensory Games": "Juegos de movimiento",
+        "Spinning Bike": "Bicicleta de spinning",
+        "Square Dance": "Baile en cuadrilla",
+        "Squash": "Squash",
+        "Step Training": "Step",
+        "Stepper": "Stepper",
+        "Street Dance": "Baile urbano",
+        "Strength Training": "Entrenamiento de fuerza",
+        "Stretching": "Estiramientos",
+        "Surfing": "Surf",
+        "Surfing (identify number of trips)": "Surf (cuenta de olas)",
+        "Swing": "Columpio",
+        "Swordsmanship": "Esgrima tradicional",
+        "Synchronized Swimming": "Natación sincronizada",
+        "Table Football": "Futbolín",
+        "Taekwondo": "Taekwondo",
+        "Tai Chi": "Taichí",
+        "Tap Dance": "Claqué",
+        "Tennis": "Tenis",
+        "Trampoline": "Cama elástica",
+        "Treadmill": "Cinta de correr",
+        "Tug-of-war": "Sogatira",
+        "Ultra Marathon": "Ultramaratón",
+        "Volleyball": "Voleibol",
+        "Wakewave Surfing": "Wakesurf",
+        "Walking": "Caminar",
+        "Walking Machine": "Cinta de caminar",
+        "Water Polo": "Waterpolo",
+        "Water Ski": "Esquí acuático",
+        "Winter Biathlon": "Biatlón de invierno",
+        "Wrestling": "Lucha",
+        "Yoga": "Yoga",
+        "Zumba": "Zumba",
+    },
 }
 
 # Patch lookup_table into configs that depend on dicts defined after SENSORS
