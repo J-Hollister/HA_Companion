@@ -189,6 +189,12 @@
                     "in_motion": "En movimiento",
                     "not_sure": "No determinado"
                 }
+            },
+            "sleep_timeline": {
+                "name": "Cronología del Sueño"
+            },
+            "sync_age": {
+                "name": "Desde la última sincronización"
             }
         },
         "binary_sensor": {
@@ -233,7 +239,25 @@
             },
             "update_pending": {
                 "name": "Actualización Disponible"
+            },
+            "is_charging": {
+                "name": "Cargando"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "fell_asleep": "{entity_name} detecta que me he dormido",
+            "woke_up": "{entity_name} detecta que me he despertado",
+            "started_moving": "{entity_name} detecta que me he puesto en marcha",
+            "stopped_moving": "{entity_name} detecta que me he parado",
+            "charging_started": "{entity_name} se ha puesto a cargar",
+            "charging_stopped": "{entity_name} ha dejado de cargar",
+            "watch_worn": "Me he puesto {entity_name}",
+            "watch_removed": "Me he quitado {entity_name}",
+            "update_available": "{entity_name} tiene una actualización disponible",
+            "battery_low": "{entity_name} se está quedando sin batería",
+            "sync_lost": "{entity_name} lleva demasiado sin sincronizar"
         }
     }
 }

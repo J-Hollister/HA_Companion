@@ -1,7 +1,7 @@
 {
     "domain": "ha_companion",
     "name": "HA Companion",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "documentation": "https://github.com/AguacatecHA/HA_Companion",
     "requirements": [
       "aiohttp"
@@ -9,5 +9,9 @@
     "issue_tracker": "https://github.com/AguacatecHA/HA_Companion/issues",
     "codeowners": ["@J-Hollister"],
     "config_flow": true,
-    "iot_class": "local_push"
+    "iot_class": "local_push",
+    "dependencies": [
+      "frontend",
+      "http"
+    ]
   }

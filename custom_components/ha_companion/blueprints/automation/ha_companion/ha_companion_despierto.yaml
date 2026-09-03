@@ -1,0 +1,45 @@
+blueprint:
+  name: HA Companion · Cuando me despierto
+  description: >
+    Ejecuta lo que quieras en cuanto el reloj detecte que te has despertado.
+
+    Trae una franja horaria para que un despertar a las cuatro de la mañana para
+    ir al baño no te levante las persianas.
+  domain: automation
+  author: HA Companion
+  input:
+    reloj:
+      name: Reloj
+      selector:
+        device:
+          integration: ha_companion
+    desde:
+      name: No antes de
+      default: "06:00:00"
+      selector:
+        time: {}
+    hasta:
+      name: No después de
+      default: "11:00:00"
+      selector:
+        time: {}
+    accion:
+      name: Qué hacer
+      description: Subir persianas, encender la cafetera, dar el parte del día...
+      selector:
+        action: {}
+
+mode: single
+
+triggers:
+  - trigger: device
+    domain: ha_companion
+    device_id: !input reloj
+    type: woke_up
+
+conditions:
+  - condition: time
+    after: !input desde
+    before: !input hasta
+
+actions: !input accion

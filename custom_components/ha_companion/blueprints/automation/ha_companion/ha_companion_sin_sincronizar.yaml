@@ -1,0 +1,32 @@
+blueprint:
+  name: HA Companion · El reloj ha dejado de sincronizar
+  description: >
+    Avisa cuando el reloj lleve demasiado tiempo sin enviar datos.
+
+    Merece la pena tenerla: si la aplicación del reloj se para, los sensores no
+    se ponen en «no disponible», se quedan CONGELADOS con las últimas cifras.
+    El panel sigue enseñando los pasos de esta mañana como si fueran de ahora y
+    nada lo desmiente. Este aviso es lo único que lo destapa.
+  domain: automation
+  author: HA Companion
+  input:
+    reloj:
+      name: Reloj
+      selector:
+        device:
+          integration: ha_companion
+    accion:
+      name: Cómo avisar
+      description: Una notificación al móvil, un mensaje de Telegram...
+      selector:
+        action: {}
+
+mode: single
+
+triggers:
+  - trigger: device
+    domain: ha_companion
+    device_id: !input reloj
+    type: sync_lost
+
+actions: !input accion

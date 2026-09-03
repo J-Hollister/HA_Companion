@@ -4,6 +4,91 @@ Todos los cambios notables de la integración **HA Companion** para Home Assista
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y el versionado es [SemVer](https://semver.org/lang/es/).
 
+## [0.1.6] - 2026-09-03
+
+### Añadido
+- **Panel propio en la barra lateral** (`/ha-companion`) con todo lo que manda el
+  reloj: estado y datos personales, contadores del día con aro de progreso,
+  acumulado de la semana, medidas del momento, sueño, deporte, información del
+  reloj y modos. Cada ficha abre el historial de su entidad al pulsarla. Con
+  varios relojes aparece un desplegable, y se abre por defecto el que esté dando
+  datos.
+- **Tres tarjetas de Lovelace**, servidas y registradas por la propia
+  integración: no hay que instalar nada ni dar de alta recursos a mano.
+  - `ha-companion-sleep-card` — hipnograma de la última noche.
+  - `ha-companion-sleep-week-card` — las últimas noches apiladas por fase.
+  - `ha-companion-workout-card` — entrenamientos colocados a su hora real.
+- **Disparadores de dispositivo** (`device_trigger.py`): once disparadores desde
+  el desplegable de la interfaz, sin necesidad de saberse ningún `entity_id` —
+  me he dormido, me he despertado, me he puesto o quitado el reloj, empiezo o
+  dejo de moverme, carga, batería baja, actualización disponible y reloj sin
+  sincronizar. Solo se ofrecen los que ese reloj puede dar.
+- **Tres blueprints** en `blueprints/automation/ha_companion/`: apagar la casa al
+  dormirse (con espera de confirmación), actuar al despertar (con franja
+  horaria) y avisar si el reloj deja de sincronizar.
+- **Sensor `sync_age`**: minutos desde el último envío del reloj, con `last_sync`
+  e `is_stale`. Es el único sensor que se actualiza solo; los demás son pasivos,
+  así que una aplicación parada era invisible — los sensores no pasaban a «no
+  disponible», se quedaban congelados con las últimas cifras.
+- **Sensor `sleep_timeline`**: cronología del sueño de la última noche, con el
+  total en minutos como estado y el detalle por tramos (fase, hora de inicio/fin
+  y duración) en `timeline`, más `segment_count`. El nombre de cada fase sale en
+  español o inglés según el idioma de la instancia de HA.
+- **Sensor `is_charging`**: estado de carga deducido de la diferencia de batería
+  entre envíos, ya que Zepp OS no expone un indicador nativo.
+- **Atributo `last_week`** en PAI y Estrés: media/mín/máx diarios de los últimos
+  7 días, leído de las estadísticas propias del recorder de HA (ambos sensores ya
+  llevan `state_class: measurement`, así que HA ya las generaba solo).
+- **Acumulado de 7 días** en pasos, calorías, distancia, quema de grasa y horas
+  de pie: atributos `week_days`, `week_total`, `week_average` y `week_best`,
+  disponibles para cualquier plantilla. Sale de las estadísticas que el recorder
+  ya generaba, sin configuración añadida.
+- **Atributo `workouts`** en el sensor de entrenamientos recientes, con los datos
+  estructurados (inicio en ISO, deporte, duración) junto a las frases de
+  siempre, para no obligar a parsear texto.
+- Documentación de todo lo anterior en `TARJETAS.md`.
+- El panel se adapta al móvil: barra superior con **botón de menú** —sin él no
+  había forma de volver a la barra lateral de Home Assistant desde el móvil, el
+  panel ocupaba la pantalla entera y se quedaba uno atrapado dentro—, y el
+  selector de reloj baja a su propia línea a todo el ancho en pantallas
+  estrechas, en lugar de estrujar el título hasta partirlo en dos.
+- La cabecera del panel muestra la versión de la integración, que llega por la
+  configuración del panel.
+
+### Corregido
+- **El estado sobrevive a los reinicios.** El reloj escribe el sensor maestro por
+  la API REST, y Home Assistant no restaura los estados puestos así: cada
+  reinicio dejaba la integración entera en «no disponible» hasta la siguiente
+  sincronización, que puede tardar horas, y mientras tanto el recorder anotaba
+  ceros que ensuciaban las estadísticas. Ahora se guarda el último envío y se
+  repone al arrancar.
+- **Los nombres de deporte salen traducidos.** `SPORT_TYPES` viene del SDK de
+  Zepp solo en inglés y se usaba tal cual, así que una instalación en español
+  mostraba *Walking* y *Pool Swimming*. Añadido `SPORT_TYPE_LABELS` con los 181
+  deportes, con la misma mecánica que `SLEEP_PHASE_LABELS`: lo que no esté en la
+  tabla se queda en inglés en vez de romperse.
+- **Un deporte sin nombre ya no sale como «Unknown».** La tabla de Zepp se queda
+  corta con cada actualización del reloj: un entrenamiento real llegó con el
+  código 1215 (pasear al perro) cuando la tabla acababa en 1203. Añadido ese
+  código, y los que falten muestran ahora «Deporte 1215» en lugar de
+  «Unknown (1215)» —conservando el número, que es lo que permite añadirlos
+  después.
+- **Las fechas del historial de entrenamientos.** `start` llega como epoch en
+  milisegundos y se pasaba a `datetime.fromisoformat()`, que espera texto ISO:
+  fallaba en nueve de cada diez entradas y dejaba el número crudo, y en la décima
+  interpretaba los dígitos como un año (de ahí fechas del tipo «1788-08-28»).
+- **`is_charging` podía quedarse en «desconocido» para siempre** si dos lecturas
+  consecutivas de batería eran iguales, porque esperaba una diferencia que podía
+  no llegar nunca.
+
+### Notas de actualización
+- Cinco sensores de modos del sistema pueden tener el `entity_id` acabado en
+  `_none`, `_none_2`… en instalaciones antiguas. Se generaron cuando aún no
+  existía su traducción y el registro fija el `entity_id` de forma permanente:
+  recargar no lo renombra. El **nombre visible es correcto**; si molesta, se
+  renombra a mano desde el registro de entidades. Las instalaciones nuevas no lo
+  arrastran.
+
 ## [0.1.5] - 2026-07-17
 
 ### Añadido

@@ -3,7 +3,7 @@
 
 ## What can the HA Companion Integration do?
 
-«HA Companion» is a component for [Home Assistant](https://home-assistant.io/) that allows you to retrieve and organize health data from your Amazfit/Zepp smartwatch directly into your Home Assistant instance, with the HA Companion app installed on your watch, displaying more than 40 health, activity, sleep and device status metrics.
+«HA Companion» is a component for [Home Assistant](https://home-assistant.io/) that allows you to retrieve and organize health data from your Amazfit/Zepp smartwatch directly into your Home Assistant instance, with the HA Companion app installed on your watch, displaying more than 40 health, activity, sleep and device status metrics. It also ships a **built-in sidebar panel**, **three ready-to-use Lovelace cards**, and **automation triggers** based on what your watch already knows (fell asleep, took it off, started charging...).
 
 ---
 
@@ -56,6 +56,30 @@ Once configured, you will have the integration with all your watch sensors. If t
 
 ---
 
+## 📊 Panel and cards
+
+The integration registers its own sidebar entry, **`/ha-companion`**, on its own, showing everything the watch sends: status and personal data, today's counters with a progress ring, weekly totals, current measurements, sleep, workouts, watch info and its modes. Every card can be tapped to open that entity's history; with more than one watch a dropdown appears.
+
+It also serves three Lovelace cards, no extra install or manual resource needed:
+
+| Card | What it shows |
+|---|---|
+| `ha-companion-sleep-card` | Hypnogram of last night, one lane per phase with minutes and percentage |
+| `ha-companion-sleep-week-card` | Recent nights stacked by phase |
+| `ha-companion-workout-card` | Workouts placed at their real time on a 24-hour axis |
+
+Details and configuration options for each card are in [`TARJETAS.md`](custom_components/ha_companion/TARJETAS.md) (Spanish).
+
+---
+
+## 🤖 Automate with your watch
+
+The watch knows things no home sensor can know on its own: that you fell asleep, that you woke up, that you took it off. These are available as **device triggers** (_Settings → Automations → Trigger → Device_, picking your watch), no `entity_id` needed. Only the triggers that particular watch can provide are shown.
+
+Includes 11 triggers (fell asleep/woke up, started/stopped moving, put on/taken off, charging, low battery, update available, watch not syncing...) and **three ready-made blueprints** in `blueprints/automation/ha_companion/`: turn off the house when falling asleep, act on waking up, and warn if the watch stops syncing.
+
+---
+
 ## Available Sensors
 
 Once configured, you will have a device with sensors organized into the following categories:
@@ -87,6 +111,7 @@ Once configured, you will have a device with sensors organized into the followin
 | Awake Time | Time spent awake during the night |
 | Sleep Time | Time at which sleep started |
 | Wake-Up Time | Time at which wake-up was detected |
+| Sleep Timeline | Last night's cycles by segment (phase, start/end, duration), in the `timeline` attribute |
 
 ### 🏃 Activity
 
@@ -128,6 +153,8 @@ Once configured, you will have a device with sensors organized into the followin
 | Theater Mode | Indicates whether theater mode is enabled |
 | Do Not Disturb | Indicates whether Do Not Disturb mode is active |
 | Firmware Version | Current firmware version of the watch |
+| Charging | Inferred from the battery change between updates (Zepp OS has no native flag) |
+| Sync Age | Minutes since the watch's last update, with `is_stale` if it falls behind |
 
 ### 🔧 Diagnostics
 
@@ -143,3 +170,5 @@ Once configured, you will have a device with sensors organized into the followin
 | Calorie Goal | Configured calorie goal |
 | Standing Hours Goal | Configured standing hours goal |
 | Fat Burn Goal | Configured fat burn goal |
+
+> **Extra attributes with no dedicated sensor:** PAI and Stress carry a `last_week` attribute with the daily mean/min/max for the last 7 days; Steps, Calories, Distance, Fat Burn and Standing Hours carry `week_days`, `week_total`, `week_average` and `week_best` with the week's totals. Both are computed from statistics Home Assistant's own recorder already generates, no extra configuration needed.

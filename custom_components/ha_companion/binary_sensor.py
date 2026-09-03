@@ -28,9 +28,14 @@ async def async_setup_entry(
 
     entities = []
     for sensor_config in BINARY_SENSORS:
-        entities.append(
-            WatchBinarySensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
-        )
+        if sensor_config.get("charging_extract"):
+            entities.append(
+                WatchChargingBinarySensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
+            )
+        else:
+            entities.append(
+                WatchBinarySensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
+            )
     entities.append(
         UpdatePendingBinarySensor(hass, coordinator, config_entry.entry_id, username, master_sensor_id)
     )
@@ -125,6 +130,71 @@ class WatchBinarySensor(BinarySensorEntity):
                 self._attr_is_on = parsed
                 self._attr_available = parsed is not None
 
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._master_sensor_id], self._handle_master_update
+            )
+        )
+
+
+class WatchChargingBinarySensor(WatchBinarySensor):
+    """Infers charging status from the battery_state delta between consecutive master
+    updates — Zepp OS has no native "is charging" flag on the Battery sensor, so this
+    is the same workaround every third-party integration for this watch line uses.
+    Unknown (unavailable) until we've seen at least two readings to compare."""
+
+    def __init__(self, hass, entry_id, username, master_sensor_id, sensor_config):
+        super().__init__(hass, entry_id, username, master_sensor_id, sensor_config)
+        self._last_battery: float | None = None
+
+    def _update_from_battery(self, attr_value) -> None:
+        try:
+            battery = float(attr_value)
+        except (TypeError, ValueError):
+            self._attr_is_on = None
+            self._attr_available = False
+            return
+
+        if self._last_battery is not None:
+            if battery > self._last_battery:
+                self._attr_is_on = True
+            elif battery < self._last_battery:
+                self._attr_is_on = False
+            elif self._attr_is_on is None:
+                # First-ever comparison and it happened to be flat: don't stay stuck
+                # in "unknown" forever waiting for a delta that may never come while
+                # idle. Default to "not charging"; a later delta still overrides it.
+                self._attr_is_on = False
+            # else: equal but already initialized — keep the previous is_on (a
+            # plateau at/near 100% while still plugged in is normal and shouldn't
+            # flip the sensor to "not charging")
+        self._last_battery = battery
+        self._attr_available = self._attr_is_on is not None
+
+    @callback
+    def _handle_master_update(self, event) -> None:
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        attr_value = new_state.attributes.get(self._config["attribute"])
+        if attr_value is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+        self._update_from_battery(attr_value)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        # Skip WatchBinarySensor.async_added_to_hass (it would call the generic
+        # _parse_value, which doesn't know about deltas) and register directly.
+        await super(WatchBinarySensor, self).async_added_to_hass()
+        master_state = self.hass.states.get(self._master_sensor_id)
+        if master_state:
+            attr_value = master_state.attributes.get(self._config["attribute"])
+            if attr_value is not None:
+                self._update_from_battery(attr_value)
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, [self._master_sensor_id], self._handle_master_update
