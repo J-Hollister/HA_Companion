@@ -992,7 +992,7 @@ SPORT_TYPE_LABELS = {
         "Step Training": "Step",
         "Stepper": "Stepper",
         "Street Dance": "Baile urbano",
-        "Strength Training": "Entrenamiento de fuerza",
+        "Strength Training": "Fuerza",
         "Stretching": "Estiramientos",
         "Surfing": "Surf",
         "Surfing (identify number of trips)": "Surf (cuenta de olas)",
