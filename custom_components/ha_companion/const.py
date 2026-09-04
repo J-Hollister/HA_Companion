@@ -828,6 +828,7 @@ SPORT_TYPES = {
     # se queda corta: 1215 llegó desde un entrenamiento real y salía como
     # "Unknown (1215)". Si aparece otro código sin nombre, es esto.
     1215: "Walking the Dog",
+    1222: "Hyrox",
 }
 
 # Nombres de deporte en español. SPORT_TYPES viene del SDK de Zepp y está en
@@ -868,7 +869,9 @@ SPORT_TYPE_LABELS = {
         "Cricket": "Críquet",
         "Cross Country Running": "Campo a través",
         "Cross-Country Skiing": "Esquí de fondo",
-        "Cross-training": "Entrenamiento cruzado",
+        # "Cross-training" se deja sin traducir a propósito (2026-09-04, petición
+        # de usuario): "Entrenamiento cruzado" se confundía con CrossFit, que es
+        # una marca y una metodología distinta.
         "Curling": "Curling",
         "Dance": "Baile",
         "Dart": "Dardos",
