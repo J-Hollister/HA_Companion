@@ -24,9 +24,10 @@
 
 const TAG = "ha-companion-workout-card";
 
+const SOPORTADOS = ["es", "en", "fr", "de", "it"];
 const idioma = (hass) => {
-  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase();
-  return l.startsWith("es") ? "es" : "en";
+  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase().slice(0, 2);
+  return SOPORTADOS.includes(l) ? l : "en";
 };
 
 // Un color por familia de deporte; el resto cae en el neutro. Se compara
@@ -49,6 +50,9 @@ const color = (deporte) =>
 const DIAS = {
   es: ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"],
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  fr: ["dim", "lun", "mar", "mer", "jeu", "ven", "sam"],
+  de: ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"],
+  it: ["dom", "lun", "mar", "mer", "gio", "ven", "sab"],
 };
 
 const T = {
@@ -71,6 +75,36 @@ const T = {
     carga: "training load",
     vo2max: "VO₂ max",
     recuperacion: "h recovery",
+  },
+  fr: {
+    faltaEntity: "`entity` manquant : le capteur des entraînements récents",
+    noExiste: (e) => `${e} n'existe pas`,
+    sinDatos: "Pas encore d'entraînements.",
+    sesion: (n) => (n === 1 ? "séance" : "séances"),
+    enDias: (n) => `en ${n} jours`,
+    carga: "charge d'entraînement",
+    vo2max: "VO₂ max",
+    recuperacion: "h de récupération",
+  },
+  de: {
+    faltaEntity: "`entity` fehlt: der Sensor für letzte Trainings",
+    noExiste: (e) => `${e} existiert nicht`,
+    sinDatos: "Noch keine Trainings.",
+    sesion: (n) => (n === 1 ? "Einheit" : "Einheiten"),
+    enDias: (n) => `in ${n} Tagen`,
+    carga: "Trainingsbelastung",
+    vo2max: "VO₂ max",
+    recuperacion: "Std. Erholung",
+  },
+  it: {
+    faltaEntity: "`entity` mancante: il sensore degli allenamenti recenti",
+    noExiste: (e) => `${e} non esiste`,
+    sinDatos: "Ancora nessun allenamento.",
+    sesion: (n) => (n === 1 ? "sessione" : "sessioni"),
+    enDias: (n) => `in ${n} giorni`,
+    carga: "carico di allenamento",
+    vo2max: "VO₂ max",
+    recuperacion: "h di recupero",
   },
 };
 

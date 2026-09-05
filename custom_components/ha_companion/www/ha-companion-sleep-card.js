@@ -22,24 +22,31 @@
  *   title: Anoche                                (opcional)
  */
 
+const SOPORTADOS = ["es", "en", "fr", "de", "it"];
 const idioma = (hass) => {
-  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase();
-  return l.startsWith("es") ? "es" : "en";
+  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase().slice(0, 2);
+  return SOPORTADOS.includes(l) ? l : "en";
 };
 
-// Normaliza el texto de fase (español o inglés, lo que mande el servidor) a un
-// código interno. Lo que no se reconozca cae en su propio texto tal cual.
+// Normaliza el texto de fase (en cualquiera de los 5 idiomas que manda el
+// servidor) a un código interno. Lo que no se reconozca cae en su propio
+// texto tal cual.
 const FASE_CANON = {
-  Despierto: "AWAKE", Awake: "AWAKE",
+  Despierto: "AWAKE", Awake: "AWAKE", Éveillé: "AWAKE", Wach: "AWAKE", Sveglio: "AWAKE",
   REM: "REM",
-  "Sueño Ligero": "LIGHT", "Light Sleep": "LIGHT",
-  "Sueño Profundo": "DEEP", "Deep Sleep": "DEEP",
+  "Sueño Ligero": "LIGHT", "Light Sleep": "LIGHT", "Sommeil léger": "LIGHT",
+  "Leichter Schlaf": "LIGHT", "Sonno leggero": "LIGHT",
+  "Sueño Profundo": "DEEP", "Deep Sleep": "DEEP", "Sommeil profond": "DEEP",
+  "Tiefschlaf": "DEEP", "Sonno profondo": "DEEP",
 };
 const FASE_COLOR = { AWAKE: "#F0A030", REM: "#A78BFA", LIGHT: "#5B8DEF", DEEP: "#3D5AAF" };
 const FASE_ORDEN = ["AWAKE", "REM", "LIGHT", "DEEP"];
 const FASE_CORTO = {
   es: { AWAKE: "Despierto", REM: "REM", LIGHT: "Ligero", DEEP: "Profundo" },
   en: { AWAKE: "Awake", REM: "REM", LIGHT: "Light", DEEP: "Deep" },
+  fr: { AWAKE: "Éveillé", REM: "REM", LIGHT: "Léger", DEEP: "Profond" },
+  de: { AWAKE: "Wach", REM: "REM", LIGHT: "Leicht", DEEP: "Tief" },
+  it: { AWAKE: "Sveglio", REM: "REM", LIGHT: "Leggero", DEEP: "Profondo" },
 };
 const COLOR_OTRO = "#64748B";
 
@@ -55,6 +62,24 @@ const T = {
     noExiste: (e) => `${e} doesn't exist`,
     sinDatos: "No sleep data yet.",
     puntos: "points",
+  },
+  fr: {
+    faltaEntity: "`entity` manquant : le capteur de chronologie du sommeil",
+    noExiste: (e) => `${e} n'existe pas`,
+    sinDatos: "Pas encore de données de sommeil.",
+    puntos: "points",
+  },
+  de: {
+    faltaEntity: "`entity` fehlt: der Schlafverlauf-Sensor",
+    noExiste: (e) => `${e} existiert nicht`,
+    sinDatos: "Noch keine Schlafdaten.",
+    puntos: "Punkte",
+  },
+  it: {
+    faltaEntity: "`entity` mancante: il sensore della cronologia del sonno",
+    noExiste: (e) => `${e} non esiste`,
+    sinDatos: "Ancora nessun dato sul sonno.",
+    puntos: "punti",
   },
 };
 

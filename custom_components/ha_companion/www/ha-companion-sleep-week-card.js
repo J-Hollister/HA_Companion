@@ -35,9 +35,10 @@
 
 const TAG = "ha-companion-sleep-week-card";
 
+const SOPORTADOS = ["es", "en", "fr", "de", "it"];
 const idioma = (hass) => {
-  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase();
-  return l.startsWith("es") ? "es" : "en";
+  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase().slice(0, 2);
+  return SOPORTADOS.includes(l) ? l : "en";
 };
 
 // Mismo lenguaje de color que ha-companion-sleep-card: se leen juntas.
@@ -50,11 +51,17 @@ const FASES = [
 const FASE_NOMBRE = {
   es: { DEEP: "Profundo", REM: "REM", LIGHT: "Ligero", AWAKE: "Despierto" },
   en: { DEEP: "Deep", REM: "REM", LIGHT: "Light", AWAKE: "Awake" },
+  fr: { DEEP: "Profond", REM: "REM", LIGHT: "Léger", AWAKE: "Éveillé" },
+  de: { DEEP: "Tief", REM: "REM", LIGHT: "Leicht", AWAKE: "Wach" },
+  it: { DEEP: "Profondo", REM: "REM", LIGHT: "Leggero", AWAKE: "Sveglio" },
 };
 
 const DIAS = {
   es: ["D", "L", "M", "X", "J", "V", "S"],
   en: ["S", "M", "T", "W", "T", "F", "S"],
+  fr: ["D", "L", "M", "M", "J", "V", "S"],
+  de: ["S", "M", "D", "M", "D", "F", "S"],
+  it: ["D", "L", "M", "M", "G", "V", "S"],
 };
 
 const T = {
@@ -81,6 +88,42 @@ const T = {
     sinDatosNoche: "No data for that night",
     alDia: "average",
     nota: "Blank nights have no saved statistic; a Home Assistant restart leaves that gap.",
+  },
+  fr: {
+    faltaConfig: "`prefix` (ou `entities`) manquant, ex. sensor.balance_jesus",
+    error: "Impossible de lire les statistiques.",
+    leyendo: "Chargement des dernières nuits…",
+    sinNoches: "Aucune nuit enregistrée pour le moment. Ça se remplira chaque matin.",
+    deMedia: "en moyenne",
+    noche: (n) => (n === 1 ? "nuit" : "nuits"),
+    de: "sur",
+    sinDatosNoche: "Pas de données pour cette nuit",
+    alDia: "en moyenne",
+    nota: "Les nuits vides n'ont pas de statistique enregistrée ; un redémarrage de Home Assistant laisse ce vide.",
+  },
+  de: {
+    faltaConfig: "`prefix` (oder `entities`) fehlt, z. B. sensor.balance_jesus",
+    error: "Die Statistiken konnten nicht gelesen werden.",
+    leyendo: "Letzte Nächte werden geladen…",
+    sinNoches: "Noch keine Nächte gespeichert. Füllt sich jeden Morgen.",
+    deMedia: "im Durchschnitt",
+    noche: (n) => (n === 1 ? "Nacht" : "Nächte"),
+    de: "von",
+    sinDatosNoche: "Keine Daten für diese Nacht",
+    alDia: "im Durchschnitt",
+    nota: "Leere Nächte haben keine gespeicherte Statistik; ein Neustart von Home Assistant hinterlässt diese Lücke.",
+  },
+  it: {
+    faltaConfig: "`prefix` (o `entities`) mancante, es. sensor.balance_jesus",
+    error: "Impossibile leggere le statistiche.",
+    leyendo: "Caricamento delle ultime notti…",
+    sinNoches: "Ancora nessuna notte salvata. Si riempirà ogni mattina.",
+    deMedia: "in media",
+    noche: (n) => (n === 1 ? "notte" : "notti"),
+    de: "su",
+    sinDatosNoche: "Nessun dato per quella notte",
+    alDia: "in media",
+    nota: "Le notti vuote non hanno statistiche salvate; un riavvio di Home Assistant lascia quel vuoto.",
   },
 };
 

@@ -18,9 +18,10 @@
 
 const ULID = 26;   // longitud del prefijo del unique_id
 
+const SOPORTADOS = ["es", "en", "fr", "de", "it"];
 const idioma = (hass) => {
-  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase();
-  return l.startsWith("es") ? "es" : "en";
+  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase().slice(0, 2);
+  return SOPORTADOS.includes(l) ? l : "en";
 };
 
 // Algunos estados llegan del reloj en inglés porque no pasan por el catálogo de
@@ -30,6 +31,12 @@ const ESTADO_TRAD = {
         is_wearing: "Puesto", not_wearing: "Quitado" },
   en: { Awake: "Awake", Sleeping: "Sleeping", Napping: "Napping",
         is_wearing: "Worn", not_wearing: "Not worn" },
+  fr: { Awake: "Éveillé", Sleeping: "Endormi", Napping: "Sieste",
+        is_wearing: "Portée", not_wearing: "Retirée" },
+  de: { Awake: "Wach", Sleeping: "Schläft", Napping: "Nickerchen",
+        is_wearing: "Getragen", not_wearing: "Abgelegt" },
+  it: { Awake: "Sveglio", Sleeping: "Dorme", Napping: "Pisolino",
+        is_wearing: "Indossato", not_wearing: "Non indossato" },
 };
 const traduce = (v, lang) => (ESTADO_TRAD[lang] && ESTADO_TRAD[lang][v]) || v;
 
@@ -37,6 +44,7 @@ const T = {
   es: {
     subtitulo: "datos de tu reloj",
     sinDatosOpcion: "(sin datos)",
+    anios: "años",
     errorRegistro: "No se pudo leer el registro de entidades.",
     buscando: "Buscando relojes…",
     sinReloj: "No hay ningún reloj configurado todavía.",
@@ -74,6 +82,7 @@ const T = {
   en: {
     subtitulo: "your watch data",
     sinDatosOpcion: "(no data)",
+    anios: "yrs",
     errorRegistro: "Couldn't read the entity registry.",
     buscando: "Looking for watches…",
     sinReloj: "No watch configured yet.",
@@ -107,6 +116,120 @@ const T = {
     entrenamientos: "Workouts", carga: "Load", vo2max: "VO₂ max",
     recuperacion: "Recovery", ultimoDeporte: "Last workout", duracion: "Duration",
     locale: "en-US",
+  },
+  fr: {
+    subtitulo: "les données de votre montre",
+    sinDatosOpcion: "(pas de données)",
+    anios: "ans",
+    errorRegistro: "Impossible de lire le registre des entités.",
+    buscando: "Recherche de montres…",
+    sinReloj: "Aucune montre configurée pour le moment.",
+    reloj: "Montre",
+    ver: (id) => `Voir ${id}`,
+    bateria: (v) => `Batterie ${v}%`,
+    cargando: "En charge",
+    puesto: "Portée",
+    durmiendo: "Endormi",
+    enMovimiento: "En mouvement",
+    actualizacion: "Mise à jour disponible",
+    sinSync: (t) => `Non synchronisé depuis ${t}`,
+    de: (v) => `sur ${v}`,
+    dias: (n) => (n === 1 ? "jour" : "jours"),
+    alDia: "par jour",
+    si: "oui", no: "non",
+    sinDatosTodavia: "Aucune donnée pour le moment.",
+    hoy: "Aujourd'hui", estaSemana: "Cette semaine", ahoraMismo: "En ce moment",
+    sueno: "Sommeil", deporte: "Sport", elReloj: "La montre", modos: "Modes",
+    pasos: "Pas", calorias: "Calories", distancia: "Distance",
+    horasDePie: "Heures debout", quemaGrasa: "Combustion des graisses", pai7: "PAI (7 jours)",
+    pulso: "Fréquence cardiaque", enReposo: "Au repos", maximoHoy: "Max aujourd'hui",
+    estres: "Stress", oxigeno: "Oxygène", temperatura: "Température",
+    altitud: "Altitude", presion: "Pression",
+    firmware: "Firmware", app: "Application", ultimaPublicada: "Dernière publiée",
+    zeppOs: "Zepp OS", apiMinima: "API minimale", brillo: "Luminosité",
+    discoLibre: "Stockage libre", sincronizado: "Synchronisé",
+    noMolestar: "Ne pas déranger", modoSueno: "Mode sommeil", modoTeatro: "Mode cinéma",
+    ahorro: "Économie d'énergie", ultraAhorro: "Économie d'énergie ultra", pantallaAOD: "Écran toujours allumé",
+    puntuacion: "Score", estado: "État", seDurmio: "Endormi à", seDesperto: "Réveillé à",
+    entrenamientos: "Entraînements", carga: "Charge", vo2max: "VO₂ max",
+    recuperacion: "Récupération", ultimoDeporte: "Dernier sport", duracion: "Durée",
+    locale: "fr-FR",
+  },
+  de: {
+    subtitulo: "die Daten deiner Uhr",
+    sinDatosOpcion: "(keine Daten)",
+    anios: "Jahre",
+    errorRegistro: "Das Entitätsregister konnte nicht gelesen werden.",
+    buscando: "Uhren werden gesucht…",
+    sinReloj: "Noch keine Uhr konfiguriert.",
+    reloj: "Uhr",
+    ver: (id) => `${id} anzeigen`,
+    bateria: (v) => `Akku ${v}%`,
+    cargando: "Lädt",
+    puesto: "Getragen",
+    durmiendo: "Schläft",
+    enMovimiento: "In Bewegung",
+    actualizacion: "Update verfügbar",
+    sinSync: (t) => `Seit ${t} nicht synchronisiert`,
+    de: (v) => `von ${v}`,
+    dias: (n) => (n === 1 ? "Tag" : "Tage"),
+    alDia: "pro Tag",
+    si: "ja", no: "nein",
+    sinDatosTodavia: "Noch keine Daten.",
+    hoy: "Heute", estaSemana: "Diese Woche", ahoraMismo: "Gerade eben",
+    sueno: "Schlaf", deporte: "Training", elReloj: "Die Uhr", modos: "Modi",
+    pasos: "Schritte", calorias: "Kalorien", distancia: "Distanz",
+    horasDePie: "Stehstunden", quemaGrasa: "Fettverbrennung", pai7: "PAI (7 Tage)",
+    pulso: "Herzfrequenz", enReposo: "Ruhe", maximoHoy: "Max heute",
+    estres: "Stress", oxigeno: "Sauerstoff", temperatura: "Temperatur",
+    altitud: "Höhe", presion: "Luftdruck",
+    firmware: "Firmware", app: "App", ultimaPublicada: "Zuletzt veröffentlicht",
+    zeppOs: "Zepp OS", apiMinima: "Min. API", brillo: "Helligkeit",
+    discoLibre: "Freier Speicher", sincronizado: "Synchronisiert",
+    noMolestar: "Nicht stören", modoSueno: "Schlafmodus", modoTeatro: "Kinomodus",
+    ahorro: "Energiesparmodus", ultraAhorro: "Ultra-Energiesparmodus", pantallaAOD: "Always-on Display",
+    puntuacion: "Wert", estado: "Status", seDurmio: "Eingeschlafen", seDesperto: "Aufgewacht",
+    entrenamientos: "Trainings", carga: "Belastung", vo2max: "VO₂ max",
+    recuperacion: "Erholung", ultimoDeporte: "Letzte Sportart", duracion: "Dauer",
+    locale: "de-DE",
+  },
+  it: {
+    subtitulo: "i dati del tuo orologio",
+    sinDatosOpcion: "(nessun dato)",
+    anios: "anni",
+    errorRegistro: "Impossibile leggere il registro delle entità.",
+    buscando: "Ricerca orologi…",
+    sinReloj: "Nessun orologio configurato ancora.",
+    reloj: "Orologio",
+    ver: (id) => `Vedi ${id}`,
+    bateria: (v) => `Batteria ${v}%`,
+    cargando: "In carica",
+    puesto: "Indossato",
+    durmiendo: "Sta dormendo",
+    enMovimiento: "In movimento",
+    actualizacion: "Aggiornamento disponibile",
+    sinSync: (t) => `Non sincronizzato da ${t}`,
+    de: (v) => `di ${v}`,
+    dias: (n) => (n === 1 ? "giorno" : "giorni"),
+    alDia: "al giorno",
+    si: "sì", no: "no",
+    sinDatosTodavia: "Ancora nessun dato.",
+    hoy: "Oggi", estaSemana: "Questa settimana", ahoraMismo: "In questo momento",
+    sueno: "Sonno", deporte: "Allenamenti", elReloj: "L'orologio", modos: "Modalità",
+    pasos: "Passi", calorias: "Calorie", distancia: "Distanza",
+    horasDePie: "Ore in piedi", quemaGrasa: "Consumo grassi", pai7: "PAI (7 giorni)",
+    pulso: "Frequenza cardiaca", enReposo: "A riposo", maximoHoy: "Max oggi",
+    estres: "Stress", oxigeno: "Ossigeno", temperatura: "Temperatura",
+    altitud: "Altitudine", presion: "Pressione",
+    firmware: "Firmware", app: "App", ultimaPublicada: "Ultima pubblicata",
+    zeppOs: "Zepp OS", apiMinima: "API minima", brillo: "Luminosità",
+    discoLibre: "Spazio libero", sincronizado: "Sincronizzato",
+    noMolestar: "Non disturbare", modoSueno: "Modalità sonno", modoTeatro: "Modalità cinema",
+    ahorro: "Risparmio energetico", ultraAhorro: "Risparmio energetico ultra", pantallaAOD: "Schermo sempre attivo",
+    puntuacion: "Punteggio", estado: "Stato", seDurmio: "Addormentato", seDesperto: "Sveglio",
+    entrenamientos: "Allenamenti", carga: "Carico", vo2max: "VO₂ max",
+    recuperacion: "Recupero", ultimoDeporte: "Ultimo sport", duracion: "Durata",
+    locale: "it-IT",
   },
 };
 
@@ -506,7 +629,7 @@ class HaCompanionPanel extends HTMLElement {
 
     const quien = document.createElement("div");
     quien.className = "quien";
-    const detalles = [modelo, edad && `${edad} ${this._lang === "es" ? "años" : "y.o."}`,
+    const detalles = [modelo, edad && `${edad} ${t.anios}`,
                       altura && `${altura} cm`, peso && `${peso} kg`].filter(Boolean).join(" · ");
     quien.innerHTML = `<b>${nombre}</b><span>${detalles}</span>`;
     c.appendChild(quien);
