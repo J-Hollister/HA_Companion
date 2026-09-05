@@ -25,8 +25,9 @@
  *   type: custom:ha-companion-sleep-week-card
  *   prefix: sensor.balance_jesus          (de ahí compone las cuatro fases)
  *     — o bien —
- *   entities: {Profundo: sensor.x, REM: sensor.y, Ligero: ..., Despierto: ...}
- *     (el panel las pasa así: busca por unique_id, que no cambia con el idioma)
+ *   entities: {DEEP: sensor.x, REM: sensor.y, LIGHT: ..., AWAKE: ...}
+ *     (el panel las pasa así: son claves internas fijas, no traducidas — el
+ *     texto que se ve sale de T/FASE_NOMBRE según `hass.language`)
  *   score_entity: sensor.<...>_puntuacion_del_sueno   (opcional)
  *   days: 7                               (opcional)
  *   title: Las últimas noches             (opcional)
@@ -34,15 +35,54 @@
 
 const TAG = "ha-companion-sleep-week-card";
 
+const idioma = (hass) => {
+  const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase();
+  return l.startsWith("es") ? "es" : "en";
+};
+
 // Mismo lenguaje de color que ha-companion-sleep-card: se leen juntas.
 const FASES = [
-  { sufijo: "_sueno_profundo", nombre: "Profundo", color: "#3D5AAF" },
-  { sufijo: "_sueno_rem",      nombre: "REM",      color: "#A78BFA" },
-  { sufijo: "_sueno_ligero",   nombre: "Ligero",   color: "#5B8DEF" },
-  { sufijo: "_tiempo_despierto", nombre: "Despierto", color: "#F0A030" },
+  { sufijo: "_sueno_profundo", clave: "DEEP", color: "#3D5AAF" },
+  { sufijo: "_sueno_rem",      clave: "REM",  color: "#A78BFA" },
+  { sufijo: "_sueno_ligero",   clave: "LIGHT", color: "#5B8DEF" },
+  { sufijo: "_tiempo_despierto", clave: "AWAKE", color: "#F0A030" },
 ];
+const FASE_NOMBRE = {
+  es: { DEEP: "Profundo", REM: "REM", LIGHT: "Ligero", AWAKE: "Despierto" },
+  en: { DEEP: "Deep", REM: "REM", LIGHT: "Light", AWAKE: "Awake" },
+};
 
-const DIAS = ["D", "L", "M", "X", "J", "V", "S"];
+const DIAS = {
+  es: ["D", "L", "M", "X", "J", "V", "S"],
+  en: ["S", "M", "T", "W", "T", "F", "S"],
+};
+
+const T = {
+  es: {
+    faltaConfig: "Falta `prefix` (o `entities`), por ejemplo sensor.balance_jesus",
+    error: "No se pudieron leer las estadísticas.",
+    leyendo: "Leyendo las últimas noches…",
+    sinNoches: "Todavía no hay noches guardadas. Se irá llenando cada mañana.",
+    deMedia: "de media",
+    noche: (n) => (n === 1 ? "noche" : "noches"),
+    de: "de",
+    sinDatosNoche: "Sin datos de esa noche",
+    alDia: "al día de media",
+    nota: "Las noches en blanco no tienen estadística guardada; un reinicio de Home Assistant deja ese hueco.",
+  },
+  en: {
+    faltaConfig: "Missing `prefix` (or `entities`), e.g. sensor.balance_jesus",
+    error: "Couldn't read the statistics.",
+    leyendo: "Loading recent nights…",
+    sinNoches: "No nights saved yet. It will fill in every morning.",
+    deMedia: "average",
+    noche: (n) => (n === 1 ? "night" : "nights"),
+    de: "of",
+    sinDatosNoche: "No data for that night",
+    alDia: "average",
+    nota: "Blank nights have no saved statistic; a Home Assistant restart leaves that gap.",
+  },
+};
 
 const ESTILOS = `
   :host { display: block; }
@@ -96,7 +136,7 @@ class HaCompanionSleepWeekCard extends HTMLElement {
 
   setConfig(config) {
     if (!config || (!config.prefix && !config.entities)) {
-      throw new Error("Falta `prefix` (o `entities`), por ejemplo sensor.balance_jesus");
+      throw new Error("Missing `prefix` (or `entities`), e.g. sensor.balance_jesus");
     }
     this._config = config;
     this._noches = null;
@@ -111,18 +151,19 @@ class HaCompanionSleepWeekCard extends HTMLElement {
 
   set hass(hass) {
     const primera = !this._hass;
+    const cambioIdioma = this._hass && idioma(this._hass) !== idioma(hass);
     this._hass = hass;
-    this._quizasPedir(primera);
+    this._quizasPedir(primera || cambioIdioma);
   }
 
   getCardSize() { return 6; }
 
-  /** [{nombre, color, id}] — desde `entities` si viene, si no desde `prefix`. */
+  /** [{clave, color, id}] — desde `entities` si viene, si no desde `prefix`. */
   _fases() {
     return FASES.map((f) => ({
-      nombre: f.nombre,
+      clave: f.clave,
       color: f.color,
-      id: (this._config.entities && this._config.entities[f.nombre]) ||
+      id: (this._config.entities && this._config.entities[f.clave]) ||
           (this._config.prefix ? this._config.prefix + f.sufijo : null),
     })).filter((f) => f.id);
   }
@@ -190,7 +231,7 @@ class HaCompanionSleepWeekCard extends HTMLElement {
         porDia.get(x.dia).score = Math.round(x.valor);
       } else {
         const f = fases.find((y) => y.id === id);
-        if (f) porDia.get(x.dia).fases[f.nombre] = x.valor;
+        if (f) porDia.get(x.dia).fases[f.clave] = x.valor;
       }
     }
     this._noches = porDia;
@@ -198,16 +239,20 @@ class HaCompanionSleepWeekCard extends HTMLElement {
   }
 
   _render() {
+    const lang = idioma(this._hass);
+    const t = T[lang];
+    const nombreDe = FASE_NOMBRE[lang];
+    const dias7 = DIAS[lang];
     const c = this._card;
     c.innerHTML = "";
     if (this._config.title) c.setAttribute("header", this._config.title);
 
     if (this._noches === "error") {
-      c.innerHTML = `<div class="error">No se pudieron leer las estadísticas.</div>`;
+      c.innerHTML = `<div class="error">${t.error}</div>`;
       return;
     }
     if (!this._noches) {
-      c.innerHTML = `<div class="vacio">Leyendo las últimas noches…</div>`;
+      c.innerHTML = `<div class="vacio">${t.leyendo}</div>`;
       return;
     }
 
@@ -220,15 +265,14 @@ class HaCompanionSleepWeekCard extends HTMLElement {
       const d = new Date(hoy); d.setDate(d.getDate() - i);
       const n = this._noches.get(d.getTime());
       const fases = (n && n.fases) || {};
-      const total = listaFases.reduce((a, f) => a + (fases[f.nombre] || 0), 0);
+      const total = listaFases.reduce((a, f) => a + (fases[f.clave] || 0), 0);
       // Un reinicio deja el día a 0: eso es un hueco, no una noche en vela.
       cols.push({ fecha: d, fases, total, score: n ? n.score : null, hay: total > 0 });
     }
 
     const conDatos = cols.filter((x) => x.hay);
     if (!conDatos.length) {
-      c.innerHTML = `<div class="vacio">Todavía no hay noches guardadas. ` +
-                    `Se irá llenando cada mañana.</div>`;
+      c.innerHTML = `<div class="vacio">${t.sinNoches}</div>`;
       return;
     }
 
@@ -240,8 +284,8 @@ class HaCompanionSleepWeekCard extends HTMLElement {
     cab.className = "cab";
     cab.innerHTML =
       `<span class="media">${dur(media)}</span>` +
-      `<span class="sub">de media · ${conDatos.length} ` +
-      `${conDatos.length === 1 ? "noche" : "noches"} de ${dias}</span>`;
+      `<span class="sub">${t.deMedia} · ${conDatos.length} ` +
+      `${t.noche(conDatos.length)} ${t.de} ${dias}</span>`;
     c.appendChild(cab);
 
     // ---- columnas -------------------------------------------------------
@@ -253,23 +297,23 @@ class HaCompanionSleepWeekCard extends HTMLElement {
       if (!x.hay) {
         const h = document.createElement("div");
         h.className = "hueco";
-        h.title = "Sin datos de esa noche";
+        h.title = t.sinDatosNoche;
         col.appendChild(h);
       } else {
         const pila = document.createElement("div");
         pila.className = "pila";
         pila.style.height = `${(x.total / tope) * 100}%`;
-        pila.title = listaFases.filter((f) => x.fases[f.nombre])
-          .map((f) => `${f.nombre} ${Math.round(x.fases[f.nombre])} min`)
+        pila.title = listaFases.filter((f) => x.fases[f.clave])
+          .map((f) => `${nombreDe[f.clave]} ${Math.round(x.fases[f.clave])} min`)
           .join(" · ");
         listaFases.forEach((f) => {
-          const v = x.fases[f.nombre];
+          const v = x.fases[f.clave];
           if (!v) return;
-          const t = document.createElement("div");
-          t.className = "trozo";
-          t.style.height = `${(v / x.total) * 100}%`;
-          t.style.background = f.color;
-          pila.appendChild(t);
+          const t2 = document.createElement("div");
+          t2.className = "trozo";
+          t2.style.height = `${(v / x.total) * 100}%`;
+          t2.style.background = f.color;
+          pila.appendChild(t2);
         });
         col.appendChild(pila);
       }
@@ -283,7 +327,7 @@ class HaCompanionSleepWeekCard extends HTMLElement {
     cols.forEach((x) => {
       const p = document.createElement("div");
       p.className = "pie" + (x.hay ? "" : " sin");
-      p.innerHTML = `<b>${DIAS[x.fecha.getDay()]}</b>` +
+      p.innerHTML = `<b>${dias7[x.fecha.getDay()]}</b>` +
                     (x.hay ? dur(x.total) : "—") +
                     (x.hay && x.score ? `<br>${x.score}` : "");
       pies.appendChild(p);
@@ -294,11 +338,11 @@ class HaCompanionSleepWeekCard extends HTMLElement {
     const ley = document.createElement("div");
     ley.className = "leyenda";
     listaFases.forEach((f) => {
-      const min = conDatos.reduce((a, x) => a + (x.fases[f.nombre] || 0), 0);
+      const min = conDatos.reduce((a, x) => a + (x.fases[f.clave] || 0), 0);
       if (!min) return;
       const s = document.createElement("span");
-      s.innerHTML = `<i style="background:${f.color}"></i>${f.nombre} · ` +
-                    `${Math.round(min / conDatos.length)} min de media`;
+      s.innerHTML = `<i style="background:${f.color}"></i>${nombreDe[f.clave]} · ` +
+                    `${Math.round(min / conDatos.length)} min ${t.alDia}`;
       ley.appendChild(s);
     });
     c.appendChild(ley);
@@ -306,8 +350,7 @@ class HaCompanionSleepWeekCard extends HTMLElement {
     if (conDatos.length < dias) {
       const n = document.createElement("div");
       n.className = "nota";
-      n.textContent = "Las noches en blanco no tienen estadística guardada; " +
-                      "un reinicio de Home Assistant deja ese hueco.";
+      n.textContent = t.nota;
       c.appendChild(n);
     }
   }
@@ -321,8 +364,8 @@ const definir = () => {
   if (!window.customCards.some((c) => c.type === TAG)) {
     window.customCards.push({
       type: TAG,
-      name: "HA Companion · Sueño semanal",
-      description: "Las últimas noches apiladas por fase, desde las estadísticas del recorder.",
+      name: "HA Companion · Sleep (week)",
+      description: "Recent nights stacked by phase, from the recorder statistics.",
       preview: false,
     });
   }
@@ -335,6 +378,6 @@ const reintento = setInterval(() => {
   if (++intentos >= 60) clearInterval(reintento);
 }, 250);
 
-console.info("%c HA-COMPANION-SLEEP-WEEK-CARD %c v1.0.0 ",
+console.info("%c HA-COMPANION-SLEEP-WEEK-CARD %c v1.1.0 ",
   "color:#fff;background:#5B8DEF;font-weight:700",
   "color:#5B8DEF;background:#fff");
