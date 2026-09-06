@@ -156,11 +156,17 @@ estadísticas a largo plazo, que no guardan el detalle):
   (por defecto **10 días**; si el usuario ha bajado esa retención, menos).
   Pasado ese plazo, el modal avisa de que no hay detalle guardado en vez de
   fallar en silencio.
-- Compara la fase por `stage` (la constante del reloj, `WAKE_STAGE`...) cuando
-  el tramo la trae; si viniera de una integración más vieja sin esa clave, cae
-  a reconocer el texto ya traducido (`FASE_CANON`, la misma tabla que usa
-  `ha-companion-sleep-card`) — verificado que da el mismo resultado por las
-  dos vías.
+- **El historial de estados es un museo**: guarda lo que la integración
+  escribía en cada momento, no lo que escribe hoy. Verificado con datos reales
+  que el atributo `timeline` ha tenido tres formas a lo largo del tiempo —
+  clave cruda del reloj sin traducir (`"LIGHT_STAGE"`, de antes de que
+  existiera la traducción), texto ya traducido (`"Sueño Ligero"`) y, por
+  último, las dos cosas a la vez más `stage`. La fase se reconoce probando las
+  tres, en este orden: `stage` (si el tramo lo trae), el texto traducido
+  (`FASE_CANON`) y, si tampoco encaja, la propia clave cruda por si `phase`
+  fuera de la primera época. Sin este último paso, un tramo antiguo de la fase
+  despierta se contaba como dormido — bug real, encontrado contra historial de
+  verdad, no con datos simulados.
 
 No necesita nada nuevo de la integración: esos sensores llevan
 `state_class: measurement`, así que **el recorder ya les genera estadísticas

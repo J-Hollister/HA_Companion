@@ -39,6 +39,10 @@ const FASE_CANON = {
   "Sueño Profundo": "DEEP", "Deep Sleep": "DEEP", "Sommeil profond": "DEEP",
   "Tiefschlaf": "DEEP", "Sonno profondo": "DEEP",
 };
+// Por si algún día `phase` llegara con la clave cruda del reloj sin traducir
+// (nunca debería, en el estado en vivo, pero es el mismo hueco que sí se vio
+// en el historial de la tarjeta semanal — mejor cubrirlo aquí también).
+const STAGE_CANON = { WAKE_STAGE: "AWAKE", REM_STAGE: "REM", LIGHT_STAGE: "LIGHT", DEEP_STAGE: "DEEP" };
 const FASE_COLOR = { AWAKE: "#F0A030", REM: "#A78BFA", LIGHT: "#5B8DEF", DEEP: "#3D5AAF" };
 const FASE_ORDEN = ["AWAKE", "REM", "LIGHT", "DEEP"];
 const FASE_CORTO = {
@@ -215,7 +219,7 @@ class HaCompanionSleepCard extends HTMLElement {
 
     const tramos = (st.attributes.timeline || [])
       .map((x) => ({
-        fase: FASE_CANON[x.phase] || x.phase,
+        fase: FASE_CANON[x.phase] || STAGE_CANON[x.phase] || x.phase,
         stage: x.stage,   // clave estable del reloj (WAKE_STAGE...), no traducida
         ini: aMinutos(x.start),
         fin: aMinutos(x.stop),

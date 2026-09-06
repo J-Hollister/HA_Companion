@@ -82,8 +82,16 @@ const FASE_CANON = {
   "Tiefschlaf": "DEEP", "Sonno profondo": "DEEP",
 };
 const STAGE_CANON = { WAKE_STAGE: "AWAKE", REM_STAGE: "REM", LIGHT_STAGE: "LIGHT", DEEP_STAGE: "DEEP" };
+// El historial de ESTADOS (a diferencia del sensor en vivo) guarda lo que la
+// integración escribía EN CADA MOMENTO, y `timeline.phase` ha tenido tres
+// formas a lo largo del tiempo: la clave cruda del reloj sin traducir
+// ("LIGHT_STAGE", de antes de que existiera _phase_label), el texto ya
+// traducido ("Sueño Ligero"/"Light Sleep"...) y, con `stage` añadido, las dos
+// cosas a la vez. Verificado con historial real: sin este tercer intento
+// (STAGE_CANON[x.phase]), un tramo "WAKE_STAGE" crudo en `phase` no matcheaba
+// nada y se contaba como dormido.
 const canonizar = (x) =>
-  (x.stage && STAGE_CANON[x.stage]) || FASE_CANON[x.phase] || x.phase;
+  (x.stage && STAGE_CANON[x.stage]) || FASE_CANON[x.phase] || STAGE_CANON[x.phase] || x.phase;
 
 const hhmm = (min) => {
   const m = ((min % 1440) + 1440) % 1440;
@@ -557,6 +565,10 @@ class HaCompanionSleepWeekCard extends HTMLElement {
 
     let elegido = null, elegidoTs = null;
     for (const st of hist) {
+      // Descarta estados sin `timeline` utilizable -- no solo "unavailable" por
+      // nombre: verificado en real que un reinicio de HA dejaba el estado sin
+      // atributos aunque el `state` en sí no fuera "unavailable".
+      if (!st.attributes || !Array.isArray(st.attributes.timeline) || !st.attributes.timeline.length) continue;
       const ts = new Date(st.last_changed || st.last_updated);
       if (isNaN(ts) || ts.getHours() >= CORTE) continue;
       const d2 = new Date(ts); d2.setHours(0, 0, 0, 0);

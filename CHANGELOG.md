@@ -61,7 +61,8 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   usuario real. Usa el historial de estados de HA (`history/history_during_period`
   sobre el sensor de cronología del sueño), no las estadísticas, así que solo
   funciona mientras ese día no se haya purgado del historial (por defecto 10
-  días); pasado ese plazo, avisa en vez de fallar en silencio.
+  días, menos si se ha bajado `purge_keep_days`); pasado ese plazo, avisa en
+  vez de fallar en silencio.
 - **Deportes traducidos también a francés, alemán e italiano** (además de
   español), 180 en cada idioma. Las traducciones de nombres de entidad para
   estos tres idiomas ya existían desde antes; lo nuevo es completarlas con las
@@ -101,6 +102,14 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   despierta); el intervalo completo en cama se sigue viendo, pero pequeño,
   junto a la hora. Cambio solo en la tarjeta: el estado del sensor
   `sleep_timeline` no se toca, para no romper el histórico de nadie.
+- **El hipnograma de una noche pasada (tarjeta semanal) podía contar el
+  despertar como dormido.** El historial de estados de HA guarda lo que la
+  integración escribía en cada momento, y el atributo `timeline` ha tenido
+  tres formas distintas con el tiempo (clave cruda del reloj, texto ya
+  traducido, y ambas cosas junto a `stage`); un tramo antiguo con la clave
+  cruda sin traducir no se reconocía como fase despierta y se sumaba al
+  tiempo dormido. Verificado y corregido contra historial real, no con datos
+  de prueba.
 
 ### Notas de actualización
 - Cinco sensores de modos del sistema pueden tener el `entity_id` acabado en
