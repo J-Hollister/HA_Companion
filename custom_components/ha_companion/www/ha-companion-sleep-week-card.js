@@ -565,18 +565,25 @@ class HaCompanionSleepWeekCard extends HTMLElement {
 
     let elegido = null, elegidoTs = null;
     for (const st of hist) {
+      // El WS de historial devuelve el formato COMPRIMIDO (a/s/lu con `lu` en
+      // segundos), no el verboso (attributes/state/last_changed) de la API
+      // REST -- verificado contra la instancia real, donde `st.attributes`
+      // no existe nunca y todo se descartaba en silencio. Se soportan los dos
+      // por si acaso, comprimido primero.
+      const attrs = st.a || st.attributes;
+      const epoch = st.lu ?? st.lc;
+      const ts = epoch != null ? new Date(epoch * 1000) : new Date(st.last_changed || st.last_updated);
       // Descarta estados sin `timeline` utilizable -- no solo "unavailable" por
       // nombre: verificado en real que un reinicio de HA dejaba el estado sin
       // atributos aunque el `state` en sí no fuera "unavailable".
-      if (!st.attributes || !Array.isArray(st.attributes.timeline) || !st.attributes.timeline.length) continue;
-      const ts = new Date(st.last_changed || st.last_updated);
+      if (!attrs || !Array.isArray(attrs.timeline) || !attrs.timeline.length) continue;
       if (isNaN(ts) || ts.getHours() >= CORTE) continue;
       const d2 = new Date(ts); d2.setHours(0, 0, 0, 0);
       if (d2.getTime() !== dia.getTime()) continue;
-      if (!elegidoTs || ts > elegidoTs) { elegido = st; elegidoTs = ts; }
+      if (!elegidoTs || ts > elegidoTs) { elegido = attrs; elegidoTs = ts; }
     }
 
-    const timeline = elegido && elegido.attributes && elegido.attributes.timeline;
+    const timeline = elegido && elegido.timeline;
     if (!Array.isArray(timeline) || !timeline.length) {
       this._modalNoche = { estado: "vacio", fecha: dia };
       this._pintarModal();
