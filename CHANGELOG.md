@@ -54,6 +54,14 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   estrechas, en lugar de estrujar el título hasta partirlo en dos.
 - La cabecera del panel muestra la versión de la integración, que llega por la
   configuración del panel.
+- **Panel y tarjetas en francés, alemán e italiano**, además de español e
+  inglés. Cualquier otro idioma sigue cayendo en inglés.
+- **Deportes traducidos también a francés, alemán e italiano** (además de
+  español), 180 en cada idioma. Las traducciones de nombres de entidad para
+  estos tres idiomas ya existían desde antes; lo nuevo es completarlas con las
+  claves que faltaban (`sleep_timeline`, `is_charging`, `sync_age`,
+  `workout_history`, los disparadores de dispositivo) y extender el panel/las
+  tarjetas y el catálogo de deportes, que no las tenían.
 
 ### Corregido
 - **El estado sobrevive a los reinicios.** El reloj escribe el sensor maestro por
@@ -80,6 +88,13 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
 - **`is_charging` podía quedarse en «desconocido» para siempre** si dos lecturas
   consecutivas de batería eran iguales, porque esperaba una diferencia que podía
   no llegar nunca.
+- **El número grande del hipnograma contaba el tiempo despierto como dormido.**
+  Un usuario real señaló que la cabecera decía «8h 38» mientras la leyenda de
+  debajo admitía «Despierto · 67 min · 13 %» — contradictorio. Ahora el número
+  grande es el tiempo dormido de verdad (descuenta los tramos de fase
+  despierta); el intervalo completo en cama se sigue viendo, pero pequeño,
+  junto a la hora. Cambio solo en la tarjeta: el estado del sensor
+  `sleep_timeline` no se toca, para no romper el histórico de nadie.
 
 ### Notas de actualización
 - Cinco sensores de modos del sistema pueden tener el `entity_id` acabado en

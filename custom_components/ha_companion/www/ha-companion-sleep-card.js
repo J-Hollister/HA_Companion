@@ -56,30 +56,35 @@ const T = {
     noExiste: (e) => `No existe ${e}`,
     sinDatos: "Todavía no hay datos de sueño.",
     puntos: "puntos",
+    enCama: "en cama",
   },
   en: {
     faltaEntity: "Missing `entity`: the sleep timeline sensor",
     noExiste: (e) => `${e} doesn't exist`,
     sinDatos: "No sleep data yet.",
     puntos: "points",
+    enCama: "in bed",
   },
   fr: {
     faltaEntity: "`entity` manquant : le capteur de chronologie du sommeil",
     noExiste: (e) => `${e} n'existe pas`,
     sinDatos: "Pas encore de données de sommeil.",
     puntos: "points",
+    enCama: "au lit",
   },
   de: {
     faltaEntity: "`entity` fehlt: der Schlafverlauf-Sensor",
     noExiste: (e) => `${e} existiert nicht`,
     sinDatos: "Noch keine Schlafdaten.",
     puntos: "Punkte",
+    enCama: "im Bett",
   },
   it: {
     faltaEntity: "`entity` mancante: il sensore della cronologia del sonno",
     noExiste: (e) => `${e} non esiste`,
     sinDatos: "Ancora nessun dato sul sonno.",
     puntos: "punti",
+    enCama: "a letto",
   },
 };
 
@@ -225,6 +230,12 @@ class HaCompanionSleepCard extends HTMLElement {
     }
 
     const total = tramos.reduce((a, x) => a + x.min, 0);
+    // Dormido de verdad = todo menos los tramos despierto. El número grande de
+    // la cabecera es este, no el intervalo completo en cama: un usuario real
+    // señaló que "8h 38" arriba y "Despierto · 67 min · 13%" en la leyenda de
+    // debajo se contradecían — 67 min despierto no pueden estar "dormidos".
+    // El intervalo completo en cama se queda, pero pequeño, junto a la hora.
+    const dormido = tramos.filter((x) => x.fase !== "AWAKE").reduce((a, x) => a + x.min, 0);
     const inicio = tramos[0].ini ?? 0;
     const score = this._puntuacion();
 
@@ -232,8 +243,8 @@ class HaCompanionSleepCard extends HTMLElement {
     const cab = document.createElement("div");
     cab.className = "cab";
     cab.innerHTML =
-      `<span class="total">${duracion(total)}</span>` +
-      `<span class="rango">${tramos[0].start} → ${tramos[tramos.length - 1].stop}</span>` +
+      `<span class="total">${duracion(dormido)}</span>` +
+      `<span class="rango">${tramos[0].start} → ${tramos[tramos.length - 1].stop} · ${duracion(total)} ${t.enCama}</span>` +
       (score != null
         ? `<span class="marca"><b>${score}</b>${t.puntos}</span>`
         : "");

@@ -94,6 +94,27 @@ score_entity: sensor.amazfit_balance_jesus     # opcional
 atributo `sleep_info`, que **llega como cadena JSON, no como diccionario**. La
 tarjeta lo parsea; si escribes tú una plantilla, acuérdate de `from_json`.
 
+**El número grande es el tiempo DORMIDO, no el intervalo en cama.** Un usuario
+real señaló que la cabecera decía "8h 38" mientras la leyenda de abajo admitía
+"Despierto · 67 min · 13%" — contradictorio a simple vista. El número grande
+resta los tramos de fase despierta (`FASE_CANON` normalizado a `"AWAKE"`); el
+intervalo completo en cama (con los despertares incluidos) se queda, pero
+pequeño, junto a la hora de inicio/fin. La leyenda de reparto por fases no
+cambia: sigue mostrando el porcentaje de cada una sobre el total en cama, así
+que "Despierto · 13%" ahora es coherente con el número de arriba en vez de
+contradecirlo.
+
+Ojo: **el estado del sensor `sleep_timeline` no ha cambiado**, sigue siendo la
+suma de todos los tramos (incluida la fase despierta) — cambiar el estado
+rompería el histórico de quien ya lo tenga grabado en el recorder. Esto es
+puramente un cálculo del lado de la tarjeta, a partir del atributo `timeline`.
+
+Comprobado que `sleep_info.totalTime` (el campo que manda el propio Zepp) **no
+sirve como referencia**: es literalmente `endTime − startTime`, ni siquiera
+descuenta los despertares — no es "el cálculo de sueño de Zepp", es solo el
+intervalo. Verificado con datos reales: una noche con 546 min de `totalTime`
+no coincidía ni con 451 (dormido) ni con 518 (en cama).
+
 ---
 
 ## `ha-companion-sleep-week-card` — la semana
