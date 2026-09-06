@@ -216,6 +216,7 @@ class HaCompanionSleepCard extends HTMLElement {
     const tramos = (st.attributes.timeline || [])
       .map((x) => ({
         fase: FASE_CANON[x.phase] || x.phase,
+        stage: x.stage,   // clave estable del reloj (WAKE_STAGE...), no traducida
         ini: aMinutos(x.start),
         fin: aMinutos(x.stop),
         min: Number(x.duration_min) || 0,
@@ -235,7 +236,14 @@ class HaCompanionSleepCard extends HTMLElement {
     // señaló que "8h 38" arriba y "Despierto · 67 min · 13%" en la leyenda de
     // debajo se contradecían — 67 min despierto no pueden estar "dormidos".
     // El intervalo completo en cama se queda, pero pequeño, junto a la hora.
-    const dormido = tramos.filter((x) => x.fase !== "AWAKE").reduce((a, x) => a + x.min, 0);
+    //
+    // Se compara por `stage` (WAKE_STAGE, estable, no traducido) cuando existe;
+    // si el sensor todavía no lo manda (integración sin actualizar), se cae al
+    // `fase` ya canonicalizada por FASE_CANON — verificado que también acierta,
+    // pero `stage` no depende de mantener esa tabla sincronizada con
+    // SLEEP_PHASE_LABELS a mano.
+    const esDespierto = (x) => (x.stage ? x.stage === "WAKE_STAGE" : x.fase === "AWAKE");
+    const dormido = tramos.filter((x) => !esDespierto(x)).reduce((a, x) => a + x.min, 0);
     const inicio = tramos[0].ini ?? 0;
     const score = this._puntuacion();
 

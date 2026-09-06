@@ -700,6 +700,12 @@ class WatchSleepTimelineSensor(WatchSensor):
                 stage_name = self._model_to_name.get(model, f"Unknown ({model})")
                 result.append({
                     "phase": self._phase_label(stage_name),
+                    # `phase` is for display and changes with the language; `stage` is
+                    # for comparing and is always the watch's own constant
+                    # (WAKE_STAGE/REM_STAGE/LIGHT_STAGE/DEEP_STAGE), never translated.
+                    # Same lesson as entity_id vs unique_id: what's shown can't be
+                    # what's compared.
+                    "stage": stage_name,
                     "start": self._to_hhmm(start),
                     "stop": self._to_hhmm(stop),
                     "duration_min": stop - start,
