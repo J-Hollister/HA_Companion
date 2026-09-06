@@ -245,11 +245,15 @@ const ESTILOS = `
   .error { color: var(--error-color, #db4437); font-size: 14px; }
 
   /* ---- modal de una noche --------------------------------------------- */
+  /* z-index explícito en el propio host, no solo en .fondo: si algún día una
+     tarjeta vecina lleva su propio z-index, esto no depende del orden en el
+     DOM para quedar por encima. */
+  .modal-host { position: relative; z-index: 1000; }
   .fondo { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.5);
            display: flex; align-items: center; justify-content: center; padding: 16px; }
   .caja { background: var(--card-background-color); border-radius: 12px; padding: 20px;
           max-width: 480px; width: 100%; max-height: 85vh; overflow: auto;
-          box-shadow: var(--ha-card-box-shadow, 0 4px 20px rgba(0,0,0,.3)); }
+          box-shadow: var(--ha-card-box-shadow, 0 4px 20px rgba(0,0,0,.3)); outline: none; }
   .caja-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
   .caja-titulo { font-size: 15px; font-weight: 500; color: var(--primary-text-color); flex: 1; }
   .cerrar-btn { background: none; border: none; cursor: pointer; padding: 4px;
@@ -607,9 +611,14 @@ class HaCompanionSleepWeekCard extends HTMLElement {
     const fondo = document.createElement("div");
     fondo.className = "fondo";
     fondo.addEventListener("click", (e) => { if (e.target === fondo) this._cerrarModal(); });
+    // Además del Escape a nivel de window (por si el foco se queda fuera del
+    // shadow DOM), uno en el propio fondo: con el foco ya dentro del modal
+    // (ver _pintarModal más abajo) este es el que responde de verdad.
+    fondo.addEventListener("keydown", (e) => { if (e.key === "Escape") this._cerrarModal(); });
 
     const caja = document.createElement("div");
     caja.className = "caja";
+    caja.setAttribute("tabindex", "-1");
     fondo.appendChild(caja);
 
     const fechaTxt = this._modalNoche.fecha.toLocaleDateString(
@@ -642,6 +651,10 @@ class HaCompanionSleepWeekCard extends HTMLElement {
 
     host.innerHTML = "";
     host.appendChild(fondo);
+    // El foco tiene que entrar en el modal para que el teclado (Escape,
+    // tabulación) funcione de verdad; sin esto el foco se queda en la
+    // columna que se pulsó, fuera del propio diálogo.
+    caja.focus();
 
     if (!this._escHandler) {
       this._escHandler = (e) => { if (e.key === "Escape" && this._modalNoche) this._cerrarModal(); };
