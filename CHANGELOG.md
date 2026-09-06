@@ -56,6 +56,12 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   configuración del panel.
 - **Panel y tarjetas en francés, alemán e italiano**, además de español e
   inglés. Cualquier otro idioma sigue cayendo en inglés.
+- **Pulsar una noche en `ha-companion-sleep-week-card` abre su hipnograma**,
+  igual que el de la última noche pero fijado a ese día — petición de un
+  usuario real. Usa el historial de estados de HA (`history/history_during_period`
+  sobre el sensor de cronología del sueño), no las estadísticas, así que solo
+  funciona mientras ese día no se haya purgado del historial (por defecto 10
+  días); pasado ese plazo, avisa en vez de fallar en silencio.
 - **Deportes traducidos también a francés, alemán e italiano** (además de
   español), 180 en cada idioma. Las traducciones de nombres de entidad para
   estos tres idiomas ya existían desde antes; lo nuevo es completarlas con las

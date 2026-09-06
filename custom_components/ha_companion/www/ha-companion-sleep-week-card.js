@@ -29,8 +29,20 @@
  *     (el panel las pasa así: son claves internas fijas, no traducidas — el
  *     texto que se ve sale de T/FASE_NOMBRE según `hass.language`)
  *   score_entity: sensor.<...>_puntuacion_del_sueno   (opcional)
+ *   timeline_entity: sensor.<...>_cronologia_del_sueno (opcional; sin él las
+ *     columnas no son pulsables — hace falta para pedir el historial de
+ *     ESTADOS, no de estadísticas, y sacar el `timeline` tal y como estaba
+ *     esa noche)
  *   days: 7                               (opcional)
  *   title: Las últimas noches             (opcional)
+ *
+ * Pulsar una noche con datos abre un hipnograma (igual que
+ * ha-companion-sleep-card, pero de ese día) vía `history/history_during_period`
+ * sobre `timeline_entity`: coge el último estado de ese día anterior al mismo
+ * CORTE de las 13:00 que usan las estadísticas, para ser coherente con cómo se
+ * agrupó esa columna. Solo funciona mientras el historial de estados de HA no
+ * haya purgado ese día (por defecto 10 días) — más corto que lo típico
+ * (`days: 7`), pero no está garantizado si el usuario ha bajado la retención.
  */
 
 const TAG = "ha-companion-sleep-week-card";
@@ -55,6 +67,33 @@ const FASE_NOMBRE = {
   de: { DEEP: "Tief", REM: "REM", LIGHT: "Leicht", AWAKE: "Wach" },
   it: { DEEP: "Profondo", REM: "REM", LIGHT: "Leggero", AWAKE: "Sveglio" },
 };
+const FASE_COLOR = { AWAKE: "#F0A030", REM: "#A78BFA", LIGHT: "#5B8DEF", DEEP: "#3D5AAF" };
+const FASE_ORDEN = ["AWAKE", "REM", "LIGHT", "DEEP"];
+const COLOR_OTRO = "#64748B";
+
+// Respaldo por si el historial trae un timeline sin `stage` (sensor viejo):
+// mismo texto que SLEEP_PHASE_LABELS, ver ha-companion-sleep-card.js.
+const FASE_CANON = {
+  Despierto: "AWAKE", Awake: "AWAKE", Éveillé: "AWAKE", Wach: "AWAKE", Sveglio: "AWAKE",
+  REM: "REM",
+  "Sueño Ligero": "LIGHT", "Light Sleep": "LIGHT", "Sommeil léger": "LIGHT",
+  "Leichter Schlaf": "LIGHT", "Sonno leggero": "LIGHT",
+  "Sueño Profundo": "DEEP", "Deep Sleep": "DEEP", "Sommeil profond": "DEEP",
+  "Tiefschlaf": "DEEP", "Sonno profondo": "DEEP",
+};
+const STAGE_CANON = { WAKE_STAGE: "AWAKE", REM_STAGE: "REM", LIGHT_STAGE: "LIGHT", DEEP_STAGE: "DEEP" };
+const canonizar = (x) =>
+  (x.stage && STAGE_CANON[x.stage]) || FASE_CANON[x.phase] || x.phase;
+
+const hhmm = (min) => {
+  const m = ((min % 1440) + 1440) % 1440;
+  return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+};
+const aMinutos = (txt) => {
+  if (typeof txt !== "string") return null;
+  const p = txt.match(/^(\d{1,2}):(\d{2})/);
+  return p ? Number(p[1]) * 60 + Number(p[2]) : null;
+};
 
 const DIAS = {
   es: ["D", "L", "M", "X", "J", "V", "S"],
@@ -76,6 +115,12 @@ const T = {
     sinDatosNoche: "Sin datos de esa noche",
     alDia: "al día de media",
     nota: "Las noches en blanco no tienen estadística guardada; un reinicio de Home Assistant deja ese hueco.",
+    cargandoNoche: "Cargando esa noche…",
+    errorNoche: "No se pudo leer el historial de esa noche.",
+    sinDatosModal: "No hay detalle guardado de esa noche (puede que el historial ya lo haya purgado).",
+    enCama: "en cama",
+    puntos: "puntos",
+    cerrar: "Cerrar",
   },
   en: {
     faltaConfig: "Missing `prefix` (or `entities`), e.g. sensor.balance_jesus",
@@ -88,6 +133,12 @@ const T = {
     sinDatosNoche: "No data for that night",
     alDia: "average",
     nota: "Blank nights have no saved statistic; a Home Assistant restart leaves that gap.",
+    cargandoNoche: "Loading that night…",
+    errorNoche: "Couldn't read that night's history.",
+    sinDatosModal: "No saved detail for that night (history may have purged it already).",
+    enCama: "in bed",
+    puntos: "points",
+    cerrar: "Close",
   },
   fr: {
     faltaConfig: "`prefix` (ou `entities`) manquant, ex. sensor.balance_jesus",
@@ -100,6 +151,12 @@ const T = {
     sinDatosNoche: "Pas de données pour cette nuit",
     alDia: "en moyenne",
     nota: "Les nuits vides n'ont pas de statistique enregistrée ; un redémarrage de Home Assistant laisse ce vide.",
+    cargandoNoche: "Chargement de cette nuit…",
+    errorNoche: "Impossible de lire l'historique de cette nuit.",
+    sinDatosModal: "Aucun détail enregistré pour cette nuit (l'historique l'a peut-être déjà purgé).",
+    enCama: "au lit",
+    puntos: "points",
+    cerrar: "Fermer",
   },
   de: {
     faltaConfig: "`prefix` (oder `entities`) fehlt, z. B. sensor.balance_jesus",
@@ -112,6 +169,12 @@ const T = {
     sinDatosNoche: "Keine Daten für diese Nacht",
     alDia: "im Durchschnitt",
     nota: "Leere Nächte haben keine gespeicherte Statistik; ein Neustart von Home Assistant hinterlässt diese Lücke.",
+    cargandoNoche: "Diese Nacht wird geladen…",
+    errorNoche: "Der Verlauf dieser Nacht konnte nicht gelesen werden.",
+    sinDatosModal: "Kein gespeichertes Detail für diese Nacht (der Verlauf hat es möglicherweise schon gelöscht).",
+    enCama: "im Bett",
+    puntos: "Punkte",
+    cerrar: "Schließen",
   },
   it: {
     faltaConfig: "`prefix` (o `entities`) mancante, es. sensor.balance_jesus",
@@ -124,6 +187,12 @@ const T = {
     sinDatosNoche: "Nessun dato per quella notte",
     alDia: "in media",
     nota: "Le notti vuote non hanno statistiche salvate; un riavvio di Home Assistant lascia quel vuoto.",
+    cargandoNoche: "Caricamento di quella notte…",
+    errorNoche: "Impossibile leggere la cronologia di quella notte.",
+    sinDatosModal: "Nessun dettaglio salvato per quella notte (la cronologia potrebbe averlo già eliminato).",
+    enCama: "a letto",
+    puntos: "punti",
+    cerrar: "Chiudi",
   },
 };
 
@@ -140,6 +209,8 @@ const ESTILOS = `
              margin: 18px 0 0; }
   .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
          height: 100%; gap: 0; position: relative; }
+  .col.pulsable { cursor: pointer; }
+  .col.pulsable:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
   .pila { display: flex; flex-direction: column-reverse; border-radius: 4px;
           overflow: hidden; transition: filter .12s; }
   .pila:hover { filter: brightness(1.3); }
@@ -164,6 +235,44 @@ const ESTILOS = `
           opacity: .8; }
   .vacio { color: var(--secondary-text-color); font-size: 14px; }
   .error { color: var(--error-color, #db4437); font-size: 14px; }
+
+  /* ---- modal de una noche --------------------------------------------- */
+  .fondo { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.5);
+           display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .caja { background: var(--card-background-color); border-radius: 12px; padding: 20px;
+          max-width: 480px; width: 100%; max-height: 85vh; overflow: auto;
+          box-shadow: var(--ha-card-box-shadow, 0 4px 20px rgba(0,0,0,.3)); }
+  .caja-cab { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .caja-titulo { font-size: 15px; font-weight: 500; color: var(--primary-text-color); flex: 1; }
+  .cerrar-btn { background: none; border: none; cursor: pointer; padding: 4px;
+                color: var(--secondary-text-color); border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; }
+  .cerrar-btn:hover { background: var(--secondary-background-color); }
+  .m-cab { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 10px 0 16px; }
+  .m-total { font-size: 26px; font-weight: 500; line-height: 1.1;
+             color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  .m-rango { color: var(--secondary-text-color); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .m-marca { margin-left: auto; display: flex; align-items: center; gap: 6px;
+             color: var(--secondary-text-color); font-size: 13px; }
+  .m-marca b { font-size: 17px; font-weight: 500; color: var(--primary-text-color);
+               font-variant-numeric: tabular-nums; }
+  .m-grafica { display: grid; grid-template-columns: auto 1fr; gap: 0 10px; margin: 12px 0 4px; }
+  .m-etiquetas { display: grid; }
+  .m-etiquetas span { display: flex; align-items: center; font-size: 11px;
+                      color: var(--secondary-text-color); white-space: nowrap; }
+  .m-lienzo { position: relative; }
+  .m-carril { position: absolute; left: 0; right: 0; border-radius: 3px;
+              background: var(--divider-color); opacity: .35; }
+  .m-tramo { position: absolute; border-radius: 3px; }
+  .m-eje { grid-column: 2; position: relative; height: 14px; margin-top: 6px;
+           font-size: 11px; color: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
+  .m-eje span { position: absolute; transform: translateX(-50%); }
+  .m-leyenda { display: grid; gap: 6px; margin-top: 14px; }
+  .m-fila { display: flex; align-items: center; gap: 9px; }
+  .m-punto { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .m-nombre { width: 80px; font-size: 12px; color: var(--primary-text-color); }
+  .m-cifra { flex: none; font-size: 12px; color: var(--secondary-text-color);
+             font-variant-numeric: tabular-nums; }
 `;
 
 const dur = (min) => {
@@ -184,11 +293,14 @@ class HaCompanionSleepWeekCard extends HTMLElement {
     this._config = config;
     this._noches = null;
     this._pedido = 0;
+    this._modalNoche = null;
     if (!this.shadowRoot) {
       this.attachShadow({ mode: "open" });
-      this.shadowRoot.innerHTML = `<style>${ESTILOS}</style><ha-card></ha-card>`;
+      this.shadowRoot.innerHTML =
+        `<style>${ESTILOS}</style><ha-card></ha-card><div class="modal-host"></div>`;
     }
     this._card = this.shadowRoot.querySelector("ha-card");
+    this._modalHost = this.shadowRoot.querySelector(".modal-host");
     if (this._hass) this._quizasPedir(true);
   }
 
@@ -359,6 +471,18 @@ class HaCompanionSleepWeekCard extends HTMLElement {
           pila.appendChild(t2);
         });
         col.appendChild(pila);
+        // Pulsable solo si hay datos y la tarjeta sabe de qué entidad pedir el
+        // historial. Sin `timeline_entity` la columna sigue mostrando el
+        // reparto, simplemente no abre nada al tocarla.
+        if (this._config.timeline_entity) {
+          col.classList.add("pulsable");
+          col.setAttribute("role", "button");
+          col.setAttribute("tabindex", "0");
+          col.addEventListener("click", () => this._abrirNoche(x.fecha));
+          col.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._abrirNoche(x.fecha); }
+          });
+        }
       }
       g.appendChild(col);
     });
@@ -396,6 +520,227 @@ class HaCompanionSleepWeekCard extends HTMLElement {
       n.textContent = t.nota;
       c.appendChild(n);
     }
+  }
+
+  // ============================================================
+  // MODAL DE UNA NOCHE (hipnograma al pulsar una columna)
+  // ============================================================
+
+  /** `dia` es la misma fecha (a medianoche local) usada como clave de la
+   *  columna. Pide el ESTADO (no la estadística) de `timeline_entity` en ese
+   *  día, con el mismo corte de las 13:00 que agrupó la columna, para que el
+   *  hipnograma corresponda exactamente a lo que se ve en la barra. */
+  async _abrirNoche(dia) {
+    if (!this._config.timeline_entity) return;
+    this._modalNoche = { estado: "cargando", fecha: dia };
+    this._pintarModal();
+
+    const CORTE = 13;
+    const desde = new Date(dia);
+    const hasta = new Date(dia.getTime() + 37 * 3600000);   // cubre hasta ~13:00 del día siguiente
+    let hist;
+    try {
+      const res = await this._hass.callWS({
+        type: "history/history_during_period",
+        start_time: desde.toISOString(),
+        end_time: hasta.toISOString(),
+        entity_ids: [this._config.timeline_entity],
+        minimal_response: false,
+        no_attributes: false,
+      });
+      hist = (res && res[this._config.timeline_entity]) || [];
+    } catch (e) {
+      this._modalNoche = { estado: "error", fecha: dia };
+      this._pintarModal();
+      return;
+    }
+
+    let elegido = null, elegidoTs = null;
+    for (const st of hist) {
+      const ts = new Date(st.last_changed || st.last_updated);
+      if (isNaN(ts) || ts.getHours() >= CORTE) continue;
+      const d2 = new Date(ts); d2.setHours(0, 0, 0, 0);
+      if (d2.getTime() !== dia.getTime()) continue;
+      if (!elegidoTs || ts > elegidoTs) { elegido = st; elegidoTs = ts; }
+    }
+
+    const timeline = elegido && elegido.attributes && elegido.attributes.timeline;
+    if (!Array.isArray(timeline) || !timeline.length) {
+      this._modalNoche = { estado: "vacio", fecha: dia };
+      this._pintarModal();
+      return;
+    }
+    this._modalNoche = { estado: "ok", fecha: dia, timeline };
+    this._pintarModal();
+  }
+
+  _cerrarModal() {
+    this._modalNoche = null;
+    this._pintarModal();
+  }
+
+  _pintarModal() {
+    const host = this._modalHost;
+    if (!this._modalNoche) { host.innerHTML = ""; return; }
+    const lang = idioma(this._hass);
+    const t = T[lang];
+
+    const fondo = document.createElement("div");
+    fondo.className = "fondo";
+    fondo.addEventListener("click", (e) => { if (e.target === fondo) this._cerrarModal(); });
+
+    const caja = document.createElement("div");
+    caja.className = "caja";
+    fondo.appendChild(caja);
+
+    const fechaTxt = this._modalNoche.fecha.toLocaleDateString(
+      lang === "es" ? "es-ES" : lang === "fr" ? "fr-FR" : lang === "de" ? "de-DE" : lang === "it" ? "it-IT" : "en-US",
+      { weekday: "long", day: "numeric", month: "long" }
+    );
+    const cab = document.createElement("div");
+    cab.className = "caja-cab";
+    cab.innerHTML = `<div class="caja-titulo">${fechaTxt}</div>`;
+    const btnCerrar = document.createElement("button");
+    btnCerrar.className = "cerrar-btn";
+    btnCerrar.setAttribute("aria-label", t.cerrar);
+    btnCerrar.innerHTML = `<ha-icon icon="mdi:close"></ha-icon>`;
+    btnCerrar.addEventListener("click", () => this._cerrarModal());
+    cab.appendChild(btnCerrar);
+    caja.appendChild(cab);
+
+    if (this._modalNoche.estado === "cargando") {
+      const p = document.createElement("div"); p.className = "vacio"; p.textContent = t.cargandoNoche;
+      caja.appendChild(p);
+    } else if (this._modalNoche.estado === "error") {
+      const p = document.createElement("div"); p.className = "error"; p.textContent = t.errorNoche;
+      caja.appendChild(p);
+    } else if (this._modalNoche.estado === "vacio") {
+      const p = document.createElement("div"); p.className = "vacio"; p.textContent = t.sinDatosModal;
+      caja.appendChild(p);
+    } else {
+      this._pintarHipnograma(caja, this._modalNoche.timeline, lang, t);
+    }
+
+    host.innerHTML = "";
+    host.appendChild(fondo);
+
+    if (!this._escHandler) {
+      this._escHandler = (e) => { if (e.key === "Escape" && this._modalNoche) this._cerrarModal(); };
+      window.addEventListener("keydown", this._escHandler);
+    }
+  }
+
+  /** Mismo dibujo que ha-companion-sleep-card, adaptado al tamaño del modal. */
+  _pintarHipnograma(caja, timeline, lang, t) {
+    const FASE_CORTO = {
+      es: { AWAKE: "Despierto", REM: "REM", LIGHT: "Ligero", DEEP: "Profundo" },
+      en: { AWAKE: "Awake", REM: "REM", LIGHT: "Light", DEEP: "Deep" },
+      fr: { AWAKE: "Éveillé", REM: "REM", LIGHT: "Léger", DEEP: "Profond" },
+      de: { AWAKE: "Wach", REM: "REM", LIGHT: "Leicht", DEEP: "Tief" },
+      it: { AWAKE: "Sveglio", REM: "REM", LIGHT: "Leggero", DEEP: "Profondo" },
+    }[lang];
+
+    const tramos = timeline
+      .map((x) => ({
+        fase: canonizar(x),
+        min: Number(x.duration_min) || 0,
+        start: x.start, stop: x.stop,
+      }))
+      .filter((x) => x.min > 0);
+    if (!tramos.length) {
+      const p = document.createElement("div"); p.className = "vacio"; p.textContent = t.sinDatosModal;
+      caja.appendChild(p);
+      return;
+    }
+
+    const total = tramos.reduce((a, x) => a + x.min, 0);
+    const dormido = tramos.filter((x) => x.fase !== "AWAKE").reduce((a, x) => a + x.min, 0);
+    const inicio = aMinutos(tramos[0].start) ?? 0;
+
+    const mCab = document.createElement("div");
+    mCab.className = "m-cab";
+    mCab.innerHTML =
+      `<span class="m-total">${dur(dormido)}</span>` +
+      `<span class="m-rango">${tramos[0].start} → ${tramos[tramos.length - 1].stop} · ${dur(total)} ${t.enCama}</span>`;
+    caja.appendChild(mCab);
+
+    const presentes = FASE_ORDEN.filter((f) => tramos.some((x) => x.fase === f));
+    const otras = [...new Set(tramos.map((x) => x.fase))].filter((f) => !FASE_ORDEN.includes(f));
+    const niveles = [
+      ...presentes.map((f) => ({ clave: f, color: FASE_COLOR[f], corto: FASE_CORTO[f] })),
+      ...otras.map((f) => ({ clave: f, color: COLOR_OTRO, corto: f })),
+    ];
+
+    const ALTO_FILA = 18, HUECO = 5;
+    const alto = niveles.length * ALTO_FILA + (niveles.length - 1) * HUECO;
+
+    const graf = document.createElement("div");
+    graf.className = "m-grafica";
+    const etiq = document.createElement("div");
+    etiq.className = "m-etiquetas";
+    etiq.style.gridTemplateRows = `repeat(${niveles.length}, ${ALTO_FILA}px)`;
+    etiq.style.rowGap = `${HUECO}px`;
+    niveles.forEach((n) => {
+      const s = document.createElement("span"); s.textContent = n.corto; etiq.appendChild(s);
+    });
+
+    const lienzo = document.createElement("div");
+    lienzo.className = "m-lienzo";
+    lienzo.style.height = `${alto}px`;
+    niveles.forEach((_, i) => {
+      const carril = document.createElement("div");
+      carril.className = "m-carril";
+      carril.style.top = `${i * (ALTO_FILA + HUECO)}px`;
+      carril.style.height = `${ALTO_FILA}px`;
+      lienzo.appendChild(carril);
+    });
+
+    let acumulado = 0;
+    tramos.forEach((x) => {
+      const fila = niveles.findIndex((n) => n.clave === x.fase);
+      const color = (niveles[fila] || {}).color || COLOR_OTRO;
+      const d = document.createElement("div");
+      d.className = "m-tramo";
+      d.style.left = `${(acumulado / total) * 100}%`;
+      d.style.width = `${Math.max((x.min / total) * 100, 0.4)}%`;
+      d.style.top = `${Math.max(fila, 0) * (ALTO_FILA + HUECO)}px`;
+      d.style.height = `${ALTO_FILA}px`;
+      d.style.background = color;
+      d.title = `${(niveles[fila] || {}).corto || x.fase} · ${x.start}–${x.stop} · ${x.min} min`;
+      lienzo.appendChild(d);
+      acumulado += x.min;
+    });
+    graf.appendChild(etiq);
+    graf.appendChild(lienzo);
+
+    const eje = document.createElement("div");
+    eje.className = "m-eje";
+    const salto = Math.max(1, Math.ceil(total / 60 / 6));
+    const primera = Math.ceil(inicio / 60) * 60;
+    for (let m = primera; m < inicio + total; m += 60 * salto) {
+      const s = document.createElement("span");
+      s.textContent = hhmm(m);
+      s.style.left = `${((m - inicio) / total) * 100}%`;
+      eje.appendChild(s);
+    }
+    if (eje.children.length) graf.appendChild(eje);
+    caja.appendChild(graf);
+
+    const ley = document.createElement("div");
+    ley.className = "m-leyenda";
+    niveles.forEach((n) => {
+      const min = tramos.filter((x) => x.fase === n.clave).reduce((a, x) => a + x.min, 0);
+      if (!min) return;
+      const pct = Math.round((min / total) * 100);
+      const fila = document.createElement("div");
+      fila.className = "m-fila";
+      fila.innerHTML =
+        `<span class="m-punto" style="background:${n.color}"></span>` +
+        `<span class="m-nombre">${n.corto}</span>` +
+        `<span class="m-cifra">${dur(min)} · ${pct}%</span>`;
+      ley.appendChild(fila);
+    });
+    caja.appendChild(ley);
   }
 }
 

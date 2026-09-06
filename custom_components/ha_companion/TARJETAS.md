@@ -124,19 +124,43 @@ Una columna por noche, apiladas por fase, con la media arriba.
 ```yaml
 type: custom:ha-companion-sleep-week-card
 prefix: sensor.balance_jesus
-score_entity: sensor.balance_jesus_puntuacion_del_sueno   # opcional
-days: 7                                                   # opcional
+score_entity: sensor.balance_jesus_puntuacion_del_sueno         # opcional
+timeline_entity: sensor.balance_jesus_cronologia_del_sueno      # opcional
+days: 7                                                          # opcional
 ```
 
 | Opción | Obligatoria | Qué es |
 |---|---|---|
 | `prefix` | sí\* | Prefijo de tus sensores; de ahí compone `_sueno_profundo`, `_sueno_rem`, `_sueno_ligero` y `_tiempo_despierto` |
-| `entities` | sí\* | Alternativa a `prefix`: `{Profundo: sensor.x, REM: ..., Ligero: ..., Despierto: ...}`. Es lo que usa el panel, que resuelve los ids por `unique_id` y no depende del idioma |
+| `entities` | sí\* | Alternativa a `prefix`: `{DEEP: sensor.x, REM: ..., LIGHT: ..., AWAKE: ...}` — claves internas fijas, no traducidas. Es lo que usa el panel, que resuelve los ids por `unique_id` y no depende del idioma |
 | `score_entity` | no | Puntuación del sueño, se pinta bajo cada columna |
+| `timeline_entity` | no | El sensor de cronología del sueño. Sin él las columnas no son pulsables |
 | `days` | no | Cuántas noches, 7 por defecto |
 | `title` | no | Cabecera de la tarjeta |
 
 \* Hace falta uno de los dos, `prefix` o `entities`.
+
+**Pulsar una noche con datos abre un hipnograma** de esa noche en concreto,
+igual que `ha-companion-sleep-card` pero fijado a ese día — es la petición de
+un usuario real, que quería poder mirar el detalle de una noche pasada sin
+esperar a que fuera "la última". No sale de las estadísticas (que solo dan
+los totales por fase), sino de `history/history_during_period` sobre
+`timeline_entity`: pide el ESTADO (con sus atributos completos) del final de
+ese día, con el mismo corte de las 13:00 que agrupó la columna, y pinta su
+atributo `timeline` tal cual estaba en ese momento.
+
+Dos límites de esto, por cómo funciona el historial de estados de HA (no las
+estadísticas a largo plazo, que no guardan el detalle):
+
+- Solo funciona mientras ese día no se haya purgado del historial de estados
+  (por defecto **10 días**; si el usuario ha bajado esa retención, menos).
+  Pasado ese plazo, el modal avisa de que no hay detalle guardado en vez de
+  fallar en silencio.
+- Compara la fase por `stage` (la constante del reloj, `WAKE_STAGE`...) cuando
+  el tramo la trae; si viniera de una integración más vieja sin esa clave, cae
+  a reconocer el texto ya traducido (`FASE_CANON`, la misma tabla que usa
+  `ha-companion-sleep-card`) — verificado que da el mismo resultado por las
+  dos vías.
 
 No necesita nada nuevo de la integración: esos sensores llevan
 `state_class: measurement`, así que **el recorder ya les genera estadísticas

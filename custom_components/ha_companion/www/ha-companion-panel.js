@@ -818,6 +818,7 @@ class HaCompanionPanel extends HTMLElement {
           AWAKE: r.claves.sleep_wake_minutes,
         },
         score_entity: r.claves.sleep_score,
+        timeline_entity: r.claves.sleep_timeline,
         days: 7,
       });
       if (tc) cont.appendChild(tc);
