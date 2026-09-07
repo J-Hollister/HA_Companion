@@ -7,8 +7,10 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
 ## [0.1.7] - Sin publicar
 
 ### Añadido
-- **Panel y tarjetas en francés, alemán e italiano**, además de español e
-  inglés. Cualquier otro idioma sigue cayendo en inglés.
+- **El panel y las tres tarjetas de Lovelace ahora se adaptan al idioma de
+  Home Assistant** (español, inglés, francés, alemán e italiano); antes su
+  texto estaba fijo en español sin más, sin mirar el idioma de la instancia.
+  Cualquier otro idioma cae en inglés.
 - **Deportes traducidos también a francés, alemán e italiano** (además de
   español), 180 en cada idioma.
 - **Pulsar una noche en `ha-companion-sleep-week-card` abre su hipnograma**,
