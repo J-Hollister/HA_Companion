@@ -4,7 +4,18 @@ Todos los cambios notables de la integración **HA Companion** para Home Assista
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y el versionado es [SemVer](https://semver.org/lang/es/).
 
-## [0.1.7] - Sin publicar
+## [Sin publicar]
+
+### Corregido
+- **`async_setup_entry` bloqueaba el bucle de eventos al leer el manifest y
+  las fechas de las tarjetas** (`open()` y `os.path.getmtime()` a pelo, sin
+  pasar por el executor) — HA lo detectaba y avisaba en el log
+  (`homeassistant.util.loop`, "Detected blocking call to open..."), reportado
+  por un usuario real. La versión ahora se lee del `Integration` que HA ya
+  tiene cargado (`async_get_integration`, sin tocar disco); el token de caché
+  de las tarjetas usa `hass.async_add_executor_job`.
+
+## [0.1.7] - 2026-09-07
 
 ### Añadido
 - **El panel y las tres tarjetas de Lovelace ahora se adaptan al idioma de

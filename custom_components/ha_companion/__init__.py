@@ -17,6 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.loader import async_get_integration
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "ha_companion"
@@ -37,27 +38,36 @@ PANEL_ELEMENT = "ha-companion-panel"
 PANEL_URL_PATH = "ha-companion"
 
 
-def _version(hass: HomeAssistant) -> str:
-    """La versión del manifest, para enseñarla en la cabecera del panel."""
+async def _version(hass: HomeAssistant) -> str:
+    """La versión del manifest, para enseñarla en la cabecera del panel.
+
+    Lee el manifest ya cargado por HA (`async_get_integration` cachea el
+    `Integration` tras la primera carga) en vez de abrir el fichero a mano:
+    un `open()` a pelo aquí es una llamada bloqueante dentro del bucle de
+    eventos (HA lo detecta y avisa — ver homeassistant.util.loop).
+    """
     try:
-        import json
-        ruta = hass.config.path("custom_components/ha_companion/manifest.json")
-        with open(ruta, encoding="utf-8") as f:
-            return json.load(f).get("version", "")
+        integration = await async_get_integration(hass, DOMAIN)
+        return integration.manifest.get("version", "")
     except Exception:  # pylint: disable=broad-exception-caught
         return ""
 
 
-def _card_token(hass: HomeAssistant, filename: str) -> str:
+async def _card_token(hass: HomeAssistant, filename: str) -> str:
     """Cache-busting token derived from a card file's mtime.
 
     The static path is served without a Cache-Control header, so browsers fall
     back to heuristic caching: with a fixed ?v= they can keep serving a stale
     copy of the card indefinitely. Keying the query string to the file's mtime
     means every edit produces a URL the browser has never seen.
+
+    `os.path.getmtime` is blocking I/O, so it runs in the executor — calling
+    it straight from `async_setup_entry` triggers HA's blocking-call detector.
     """
     try:
-        return str(int(os.path.getmtime(hass.config.path(f"{CARD_DIR}/{filename}"))))
+        path = hass.config.path(f"{CARD_DIR}/{filename}")
+        mtime = await hass.async_add_executor_job(os.path.getmtime, path)
+        return str(int(mtime))
     except OSError:
         return "0"
 
@@ -178,7 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
         )
         for filename in CARDS:
-            url = f"{CARD_STATIC_URL}/{filename}?v={_card_token(hass, filename)}"
+            url = f"{CARD_STATIC_URL}/{filename}?v={await _card_token(hass, filename)}"
             add_extra_js_url(hass, url)
             _LOGGER.debug("Registered Lovelace card at %s", url)
         hass.data[DOMAIN]["card_registered"] = True
@@ -209,14 +219,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "_panel_custom": {
                         "name": PANEL_ELEMENT,
                         "module_url": f"{CARD_STATIC_URL}/{PANEL_JS}"
-                                      f"?v={_card_token(hass, PANEL_JS)}",
+                                      f"?v={await _card_token(hass, PANEL_JS)}",
                         "embed_iframe": False,
                         "trust_external": False,
                     },
                     # Cualquier clave suelta de `config` llega al panel en su
                     # propiedad `panel`. La versión no la sabe de otro modo: el
                     # manifest no se sirve al frontend.
-                    "version": _version(hass),
+                    "version": await _version(hass),
                 },
                 require_admin=False,
             )
