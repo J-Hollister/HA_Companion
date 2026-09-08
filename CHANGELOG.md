@@ -23,6 +23,14 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
 - **Orden de las fases en la leyenda**, en ambas tarjetas de sueño: ahora
   Despierto, Ligero, Profundo, REM — de peor a mejor calidad de sueño, más
   fácil de leer de un vistazo. Petición de un usuario real.
+- **El sensor "Estado del Reloj" salía como "Deporte 1"/"Deporte 2"** en vez
+  de "Llevando puesto"/"En movimiento". Reportado por un usuario real. Causa:
+  desde la 0.1.6, cualquier sensor con `lookup_table` (el mecanismo genérico
+  de extractor) pasaba SIEMPRE por la traducción de deportes, aunque el
+  comentario del propio código ya avisaba de que eso pasaría el día que
+  hubiera una segunda `lookup_table` — y lo hubo, la del estado del reloj
+  (`WEAR_STATES`), añadida en la misma 0.1.6. Afecta a la 0.1.6 y la 0.1.7,
+  las dos publicadas.
 
 ## [0.1.7] - 2026-09-07
 
