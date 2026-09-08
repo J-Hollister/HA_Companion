@@ -14,6 +14,15 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   por un usuario real. La versión ahora se lee del `Integration` que HA ya
   tiene cargado (`async_get_integration`, sin tocar disco); el token de caché
   de las tarjetas usa `hass.async_add_executor_job`.
+- **La tarjeta de la última noche no mostraba la puntuación del sueño** si en
+  `score_entity` se ponía el sensor dedicado **Puntuación del sueño** (lo
+  intuitivo, y lo que ya pide la tarjeta semanal) — solo funcionaba con el
+  sensor maestro. Reportado por un usuario real. Ahora `score_entity` acepta
+  los dos: primero mira si es el maestro (atributo `sleep_info`), si no usa
+  el propio estado del sensor.
+- **Orden de las fases en la leyenda**, en ambas tarjetas de sueño: ahora
+  Despierto, Ligero, Profundo, REM — de peor a mejor calidad de sueño, más
+  fácil de leer de un vistazo. Petición de un usuario real.
 
 ## [0.1.7] - 2026-09-07
 
