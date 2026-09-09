@@ -31,6 +31,15 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   hubiera una segunda `lookup_table` — y lo hubo, la del estado del reloj
   (`WEAR_STATES`), añadida en la misma 0.1.6. Afecta a la 0.1.6 y la 0.1.7,
   las dos publicadas.
+- **Los blueprints no aparecían solos en Ajustes → Automatizaciones →
+  Blueprints.** Reportado por varios usuarios reales. Nunca hubo un fallo
+  puntual: Home Assistant no descubre blueprints por estar dentro de
+  `custom_components/ha_companion/`, solo mira `config/blueprints/
+  automation/<carpeta>/` — hacía falta que la propia integración los
+  copiara ahí, y eso nunca se implementó. Ahora `async_setup_entry` los
+  copia una vez por instancia (sin pisar nada si el usuario ya los tenía
+  importados o tocados a mano). Afecta a todas las versiones publicadas con
+  blueprints (0.1.6 y 0.1.7).
 
 ## [0.1.7] - 2026-09-07
 

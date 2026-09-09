@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import logging
 import os
+import shutil
 from datetime import timedelta
 
 import aiohttp
@@ -36,6 +37,39 @@ CARDS = (
 PANEL_JS = "ha-companion-panel.js"
 PANEL_ELEMENT = "ha-companion-panel"
 PANEL_URL_PATH = "ha-companion"
+
+# Blueprints que trae la integración. HA NO los descubre solos por estar
+# dentro de custom_components/ha_companion/ — solo mira config/blueprints/
+# automation/<carpeta>/, así que hay que copiarlos ahí a mano en el arranque.
+BLUEPRINTS_SRC_DIR = "custom_components/ha_companion/blueprints/automation/ha_companion"
+BLUEPRINTS_DST_DIR = "blueprints/automation/ha_companion"
+BLUEPRINT_FILES = (
+    "ha_companion_dormido.yaml",
+    "ha_companion_despierto.yaml",
+    "ha_companion_sin_sincronizar.yaml",
+)
+
+
+def _copy_blueprints(hass: HomeAssistant) -> None:
+    """Copia los blueprints al lugar que HA sí mira, si no están ya.
+
+    Nunca sobreescribe: si el usuario ya tiene el fichero (lo importó antes,
+    o lo ha tocado a mano), se deja tal cual. Solo rellena lo que falte.
+    Llamar siempre vía `hass.async_add_executor_job` — es I/O de disco.
+    """
+    src_dir = hass.config.path(BLUEPRINTS_SRC_DIR)
+    dst_dir = hass.config.path(BLUEPRINTS_DST_DIR)
+    try:
+        os.makedirs(dst_dir, exist_ok=True)
+        for filename in BLUEPRINT_FILES:
+            dst = os.path.join(dst_dir, filename)
+            if os.path.exists(dst):
+                continue
+            src = os.path.join(src_dir, filename)
+            if os.path.exists(src):
+                shutil.copyfile(src, dst)
+    except OSError as exc:
+        _LOGGER.warning("Could not install bundled blueprints: %s", exc)
 
 
 async def _version(hass: HomeAssistant) -> str:
@@ -175,6 +209,13 @@ class HACompanionLabelsView(HomeAssistantView):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HA Companion from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Blueprints listos para usar sin que el usuario tenga que importarlos a
+    # mano: HA solo los descubre en config/blueprints/automation/, no dentro
+    # de custom_components/, así que los copiamos ahí una vez por instancia.
+    if not hass.data[DOMAIN].get("blueprints_installed"):
+        await hass.async_add_executor_job(_copy_blueprints, hass)
+        hass.data[DOMAIN]["blueprints_installed"] = True
 
     # Serve + register the bundled Lovelace cards once per HA instance.
     if not hass.data[DOMAIN].get("card_registered"):
