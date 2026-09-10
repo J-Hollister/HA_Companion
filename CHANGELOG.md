@@ -4,7 +4,7 @@ Todos los cambios notables de la integración **HA Companion** para Home Assista
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y el versionado es [SemVer](https://semver.org/lang/es/).
 
-## [Sin publicar]
+## [0.1.8] - Sin publicar
 
 ### Corregido
 - **`async_setup_entry` bloqueaba el bucle de eventos al leer el manifest y
