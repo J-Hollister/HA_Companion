@@ -32,6 +32,11 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   empieza el día que se instale esta versión; los primeros días la tarjeta tira
   del historial normal para no salir vacía.
 
+- **Editor visual en las cuatro tarjetas.** Al añadirlas desde la interfaz sale
+  un desplegable con los relojes dados de alta: se elige el tuyo por su nombre y
+  la tarjeta queda configurada, sin tocar YAML ni saberse ningún `entity_id`.
+  Con un solo reloj ni eso: la opción por defecto ya vale.
+
 ### Corregido
 - **Las tarjetas ya se pueden añadir a cualquier panel, no solo al nuestro.**
   Se registraban en todo el frontend desde el principio, pero al añadirlas desde

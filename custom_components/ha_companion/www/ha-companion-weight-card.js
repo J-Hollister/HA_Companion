@@ -32,7 +32,7 @@ const idioma = (hass) => {
   return SOPORTADOS.includes(l) ? l : "en";
 };
 
-// --- Encontrar las entidades sin depender del idioma -----------------------
+// --- Encontrar los relojes sin depender del idioma -------------------------
 // El entity_id se genera a partir del nombre traducido, así que cambia con el
 // idioma de la instalación: buscar por texto ("_peso", "_recent_workouts") solo
 // acierta en el idioma en el que se escribió la tarjeta. Lo estable es la clave
@@ -41,29 +41,39 @@ const idioma = (hass) => {
 // otro fichero se haya cargado antes.
 const ULID = 26;
 async function relojesDeHA(hass) {
-  let ents;
+  let ents, devs;
   try {
-    ents = await hass.callWS({ type: "config/entity_registry/list" });
+    [ents, devs] = await Promise.all([
+      hass.callWS({ type: "config/entity_registry/list" }),
+      hass.callWS({ type: "config/device_registry/list" }),
+    ]);
   } catch (_) {
     return [];
   }
+  const nombreDe = new Map((devs || []).map((d) => [d.id, d.name_by_user || d.name]));
   const porDisp = new Map();
   for (const e of ents || []) {
     if (e.platform !== "ha_companion" || !e.device_id || !e.unique_id) continue;
     const clave = e.unique_id.slice(ULID + 1);
     if (!clave) continue;
-    if (!porDisp.has(e.device_id)) porDisp.set(e.device_id, {});
-    porDisp.get(e.device_id)[clave] = e.entity_id;
+    if (!porDisp.has(e.device_id)) {
+      porDisp.set(e.device_id, {
+        device_id: e.device_id,
+        nombre: nombreDe.get(e.device_id) || e.device_id,
+        claves: {},
+      });
+    }
+    porDisp.get(e.device_id).claves[clave] = e.entity_id;
   }
   // Delante, el reloj que esté dando datos: con dos relojes dados de alta, el
   // que interesa por defecto es el que se está usando.
-  const vivo = (c) => {
-    const id = c.record_time || c.battery;
+  const vivo = (r) => {
+    const id = r.claves.record_time || r.claves.battery;
     const st = id && hass.states[id];
     return !!st && st.state !== "unavailable" && st.state !== "unknown";
   };
   const todos = [...porDisp.values()];
-  return todos.filter(vivo).concat(todos.filter((c) => !vivo(c)));
+  return todos.filter(vivo).concat(todos.filter((r) => !vivo(r)));
 }
 
 const T = {
@@ -182,12 +192,16 @@ const ESTILOS = `
 `;
 
 class HaCompanionWeightCard extends HTMLElement {
+  static getConfigElement() {
+    return document.createElement(TAG + "-editor");
+  }
+
   static async getStubConfig(hass) {
     const relojes = await relojesDeHA(hass);
-    const reloj = relojes.find((c) => c.user_weight);
+    const reloj = relojes.find((x) => x.claves.user_weight);
     return {
       type: "custom:ha-companion-weight-card",
-      entity: (reloj && reloj.user_weight) || "",
+      entity: (reloj && reloj.claves.user_weight) || "",
       range: "month",
     };
   }
@@ -232,8 +246,8 @@ class HaCompanionWeightCard extends HTMLElement {
     if (!this._entidad && !this._buscando) {
       this._buscando = true;
       const relojes = await relojesDeHA(this._hass);
-      const reloj = relojes.find((c) => c.user_weight);
-      this._entidad = (reloj && reloj.user_weight) || null;
+      const reloj = relojes.find((x) => x.claves.user_weight);
+      this._entidad = (reloj && reloj.claves.user_weight) || null;
       this._buscando = false;
     }
 
@@ -444,9 +458,113 @@ class HaCompanionWeightCard extends HTMLElement {
   }
 }
 
+// --- Editor visual ---------------------------------------------------------
+// Sin esto, añadir la tarjeta desde la interfaz dejaba al usuario delante de un
+// YAML y teniéndose que saber el entity_id. Aquí se elige el reloj de una lista
+// y la tarjeta se configura sola. HTML corriente a propósito: los componentes
+// internos del frontend (ha-select, ha-form) cambian entre versiones de HA.
+const EDT = {
+  es: { reloj: "Reloj", auto: "El que esté dando datos", periodo: "Periodo", sinRelojes: "No he encontrado ningún reloj de HA Companion." },
+  en: { reloj: "Watch", auto: "Whichever is reporting", periodo: "Range", sinRelojes: "No HA Companion watch found." },
+  fr: { reloj: "Montre", auto: "Celle qui envoie des données", periodo: "Période", sinRelojes: "Aucune montre HA Companion trouvée." },
+  de: { reloj: "Uhr", auto: "Die gerade Daten sendet", periodo: "Zeitraum", sinRelojes: "Keine HA-Companion-Uhr gefunden." },
+  it: { reloj: "Orologio", auto: "Quello che sta inviando dati", periodo: "Periodo", sinRelojes: "Nessun orologio HA Companion trovato." },
+};
+
+const ESTILOS_ED = `
+  .fila { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+  label { font-size: 12px; color: var(--secondary-text-color); }
+  select { font: inherit; padding: 8px; border-radius: 6px;
+           border: 1px solid var(--divider-color);
+           background: var(--card-background-color); color: var(--primary-text-color); }
+  .aviso { color: var(--secondary-text-color); font-size: 13px; }
+`;
+
+class HaCompanionWeightCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = { ...(config || {}) };
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+      this.shadowRoot.innerHTML = `<style>${ESTILOS_ED}</style><div class="cuerpo"></div>`;
+    }
+    this._pinta();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._relojes === undefined) {
+      this._relojes = null;                       // null = pidiendo
+      relojesDeHA(hass).then((r) => { this._relojes = r; this._pinta(); });
+    }
+  }
+
+  _emitir(cambios) {
+    this._config = { ...this._config, ...cambios };
+    Object.keys(this._config).forEach((k) => {
+      if (this._config[k] === undefined) delete this._config[k];
+    });
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: this._config }, bubbles: true, composed: true,
+    }));
+    this._pinta();
+  }
+
+  _pinta() {
+    if (!this.shadowRoot) return;
+    const t = EDT[idioma(this._hass)];
+    const cuerpo = this.shadowRoot.querySelector(".cuerpo");
+    cuerpo.innerHTML = "";
+
+    const fila = (etiqueta, control) => {
+      const d = document.createElement("div");
+      d.className = "fila";
+      const l = document.createElement("label");
+      l.textContent = etiqueta;
+      d.append(l, control);
+      cuerpo.appendChild(d);
+    };
+
+    // --- reloj ---
+    const sel = document.createElement("select");
+    const relojes = this._relojes || [];
+    const conPeso = relojes.filter((r) => r.claves.user_weight);
+    const opciones = [{ v: "", txt: t.auto }]
+      .concat(conPeso.map((r) => ({ v: r.claves.user_weight, txt: r.nombre })));
+    opciones.forEach((o) => {
+      const op = document.createElement("option");
+      op.value = o.v; op.textContent = o.txt;
+      if ((this._config.entity || "") === o.v) op.selected = true;
+      sel.appendChild(op);
+    });
+    sel.addEventListener("change", () => this._emitir({ entity: sel.value || undefined }));
+    fila(t.reloj, sel);
+    if (this._relojes && !conPeso.length) {
+      const a = document.createElement("div");
+      a.className = "aviso";
+      a.textContent = t.sinRelojes;
+      cuerpo.appendChild(a);
+    }
+
+    // --- periodo ---
+    const per = document.createElement("select");
+    const tt = T[idioma(this._hass)];
+    [["week", tt.semana], ["month", tt.mes], ["year", tt.anio]].forEach(([v, txt]) => {
+      const op = document.createElement("option");
+      op.value = v; op.textContent = txt;
+      if ((this._config.range || "month") === v) op.selected = true;
+      per.appendChild(op);
+    });
+    per.addEventListener("change", () => this._emitir({ range: per.value }));
+    fila(t.periodo, per);
+  }
+}
+
 const definir = () => {
   try {
     if (!customElements.get(TAG)) customElements.define(TAG, HaCompanionWeightCard);
+    if (!customElements.get(TAG + "-editor")) {
+      customElements.define(TAG + "-editor", HaCompanionWeightCardEditor);
+    }
   } catch (_) { /* ya registrada */ }
   window.customCards = window.customCards || [];
   if (!window.customCards.some((c) => c.type === TAG)) {
