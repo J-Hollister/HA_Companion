@@ -2,6 +2,7 @@
 from __future__ import annotations
 import contextlib
 import logging
+from collections.abc import Mapping
 import os
 import shutil
 from datetime import timedelta
@@ -246,14 +247,35 @@ class HACompanionBackupView(HomeAssistantView):
 
     @staticmethod
     def _username(hass, pedido: str | None) -> str | None:
-        if pedido:
-            return pedido
-        entradas = [
+        """Devuelve el username solo si corresponde a una entrada dada de alta.
+
+        La clave del `Store` termina siendo un nombre de fichero dentro de
+        `.storage`, así que el nombre que llega en la petición NO puede usarse
+        tal cual: un `../` escaparía del directorio. Se contrasta siempre con
+        los usernames configurados, que es además lo único que tiene sentido
+        respaldar. Un nombre inventado se responde igual que uno ausente, para
+        no ir diciendo qué relojes hay dados de alta.
+        """
+        # entry.data es un MappingProxyType, no un dict: hay que comprobar
+        # Mapping o la lista sale siempre vacía.
+        configurados = [
             datos.get("username")
-            for clave, datos in hass.data.get(DOMAIN, {}).items()
-            if isinstance(datos, dict) and datos.get("username")
+            for datos in hass.data.get(DOMAIN, {}).values()
+            if isinstance(datos, Mapping) and datos.get("username")
         ]
-        return entradas[0] if len(entradas) == 1 else None
+        if not pedido:
+            return configurados[0] if len(configurados) == 1 else None
+
+        # El reloj manda el nombre tal cual lo tiene guardado, que conserva las
+        # mayúsculas (amazfit_HA_Companion), mientras que el config flow guarda
+        # el username en minúsculas. Se comparan normalizados igual que allí, y
+        # se devuelve SIEMPRE el valor configurado: así lo que acaba en la clave
+        # del Store nunca procede de la petición.
+        buscado = pedido.lower().replace(" ", "_")
+        for username in configurados:
+            if username.lower().replace(" ", "_") == buscado:
+                return username
+        return None
 
     async def get(self, request):
         hass = request.app["hass"]
