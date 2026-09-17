@@ -34,6 +34,7 @@ CARDS = (
     "ha-companion-sleep-card.js",
     "ha-companion-sleep-week-card.js",
     "ha-companion-workout-card.js",
+    "ha-companion-weight-card.js",
 )
 
 # Panel propio en la barra lateral, al estilo de lo que hace WashData.

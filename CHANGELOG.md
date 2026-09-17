@@ -21,6 +21,16 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
     en disco.
   Necesita la versión 2.13 de la app del reloj, que es la que trae los botones
   de exportar e importar.
+- **Tarjeta nueva del peso** (`custom:ha-companion-weight-card`), a petición de
+  un usuario: el peso de ahora mismo, cuánto ha subido o bajado en el periodo,
+  la línea de evolución y el mínimo, la media y el máximo. Tres botones para
+  ver la semana, el mes o el año. El peso aparece también en la sección
+  "Ahora mismo" del panel.
+- El sensor de peso pasa a llevar `state_class: measurement` (y su clase de
+  dispositivo), que es lo que hace que Home Assistant le guarde estadísticas de
+  largo plazo. **Ojo: HA no las rellena hacia atrás**, así que la gráfica
+  empieza el día que se instale esta versión; los primeros días la tarjeta tira
+  del historial normal para no salir vacía.
 
 ## [0.1.8] - Sin publicar
 

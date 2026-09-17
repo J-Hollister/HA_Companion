@@ -366,6 +366,13 @@ SENSORS = [
         "attribute": "user_weight",
         "icon": "mdi:weight-kilogram",
         "unit": "kg",
+        "device_class": "weight",
+        # El peso se cambia en el reloj y va variando, así que interesa su
+        # evolución, no solo el valor de hoy. Con `measurement` el recorder le
+        # genera estadísticas de largo plazo y la tarjeta puede pintar meses o
+        # años. OJO: HA no rellena hacia atrás — la serie empieza el día que se
+        # instala esta versión.
+        "state_class": "measurement",
         "entity_category": "diagnostic",
     },
     {

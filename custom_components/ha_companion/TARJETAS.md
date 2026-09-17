@@ -237,6 +237,43 @@ otra cosa, no para esto.
 
 ---
 
+## `ha-companion-weight-card` — el peso y su evolución
+
+El peso no lo mide el reloj: lo teclea el usuario ahí o en la app de Zepp. Por
+eso el número de hoy dice poco y lo que interesa es la línea.
+
+```yaml
+type: custom:ha-companion-weight-card
+entity: sensor.balance_jesus_peso
+range: month      # week | month | year — opcional, month por defecto
+decimals: 1       # opcional
+title: Peso       # opcional
+```
+
+| Opción | Obligatoria | Qué es |
+|---|---|---|
+| `entity` | sí | El sensor de peso del reloj |
+| `range` | no | Periodo inicial; los tres botones de la tarjeta lo cambian en vivo |
+| `decimals` | no | Decimales, 1 por defecto |
+| `title` | no | Cabecera de la tarjeta |
+
+Pinta el valor actual, cuánto ha subido o bajado desde el principio del
+periodo, la línea de evolución y el mínimo, la media y el máximo.
+
+### De dónde salen los datos, y por qué al principio se ve vacía
+
+Semana y mes salen de las **estadísticas del recorder** por día, y el año por
+mes (`recorder/statistics_during_period`, tipo `mean`).
+
+Esas estadísticas existen porque desde la 0.1.9 el sensor de peso lleva
+`state_class: measurement`. **Home Assistant no las rellena hacia atrás**: la
+serie empieza el día que se instala esa versión, no antes. Los primeros días la
+tarjeta cae al historial normal (`history_during_period`), que cubre lo que el
+recorder guarde —diez días por defecto—, así que se ve algo desde el principio;
+la vista anual tarda un año en estar completa, y no hay forma de acelerarlo.
+
+---
+
 ## Cómo se sirven, para quien toque el código
 
 Todo vive en `custom_components/ha_companion/www/` y se publica en
