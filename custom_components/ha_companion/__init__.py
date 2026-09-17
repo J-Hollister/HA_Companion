@@ -286,6 +286,10 @@ class HACompanionBackupView(HomeAssistantView):
         store: Store = Store(hass, BACKUP_VERSION, _backup_key(username))
         guardado = await store.async_load()
         if not guardado or not guardado.get("config"):
+            # La copia pudo desaparecer por detrás (limpieza de .storage, o una
+            # restauración de HA anterior a ella) y el sensor seguiría en `on`.
+            # Se avisa para que se relea y se apague.
+            async_dispatcher_send(hass, f"{BACKUP_SIGNAL}_{username}")
             return self.json({"exists": False, "saved_at": None, "config": None})
         return self.json({
             "exists": True,
@@ -311,7 +315,9 @@ class HACompanionBackupView(HomeAssistantView):
         saved_at = dt_util.utcnow().isoformat()
         store: Store = Store(hass, BACKUP_VERSION, _backup_key(username))
         await store.async_save({"saved_at": saved_at, "config": config})
-        async_dispatcher_send(hass, f"{BACKUP_SIGNAL}_{username}", saved_at, len(config))
+        # La señal no lleva datos: el sensor relee el Store, que es lo único
+        # que sabe la verdad (ver BackupBinarySensor._lee_store).
+        async_dispatcher_send(hass, f"{BACKUP_SIGNAL}_{username}")
         _LOGGER.info("Saved watch configuration backup for %s (%d keys)", username, len(config))
         return self.json({"ok": True, "saved_at": saved_at})
 

@@ -309,23 +309,36 @@ class BackupBinarySensor(BinarySensorEntity):
     def extra_state_attributes(self) -> dict:
         return {"last_backup": self._saved_at, "entries": self._keys}
 
-    @callback
-    def _actualiza(self, saved_at: str, keys: int) -> None:
-        self._saved_at = saved_at
-        self._keys = keys
-        self.async_write_ha_state()
+    async def _lee_store(self) -> None:
+        """Relee la copia guardada. Es la única forma de poner el estado.
 
-    async def async_added_to_hass(self) -> None:
-        await super().async_added_to_hass()
+        La señal no trae los datos a propósito: si el sensor se fiara de lo que
+        le llega, se quedaría en `on` cuando la copia desaparece por detrás
+        (alguien limpia `.storage`, o se restaura un backup de HA anterior a
+        ella). Leyendo siempre el `Store`, el sensor no puede mentir.
+        """
         # Import local: la vista y las constantes viven en __init__, y traerlas
         # arriba del todo haría un import circular con la plataforma.
-        from . import BACKUP_SIGNAL, BACKUP_VERSION, _backup_key
+        from . import BACKUP_VERSION, _backup_key
 
         store: Store = Store(self.hass, BACKUP_VERSION, _backup_key(self._username))
         guardado = await store.async_load()
         if guardado and guardado.get("config"):
             self._saved_at = guardado.get("saved_at")
             self._keys = len(guardado["config"])
+        else:
+            self._saved_at = None
+            self._keys = None
+
+    async def _actualiza(self) -> None:
+        await self._lee_store()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        from . import BACKUP_SIGNAL
+
+        await self._lee_store()
 
         self.async_on_remove(
             async_dispatcher_connect(
