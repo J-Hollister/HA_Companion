@@ -17,7 +17,9 @@ from homeassistant.helpers import label_registry as lr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.loader import async_get_integration
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,6 +130,25 @@ def _cache_key(username: str) -> str:
     return f"{DOMAIN}.master.{username}"
 
 
+# --- Copia de seguridad de la configuración del reloj -----------------------
+#
+# Reinstalar la app o cambiar de reloj obligaba a volver a elegir las entidades
+# una a una, reordenar el menú y reconfigurar los widgets. La app no puede
+# guardar un fichero en el móvil (el API de ajustes de Zepp no da acceso al
+# sistema de archivos), así que la copia vive aquí: la app la envía cuando el
+# usuario pulsa "exportar", y al reinstalar la pide de vuelta.
+#
+# Las credenciales NO viajan en la copia: la URL y el token hay que teclearlos
+# igualmente para que la app funcione, así que no hace falta guardarlos y así
+# no quedan en disco.
+BACKUP_VERSION = 1
+BACKUP_SIGNAL = f"{DOMAIN}_backup_updated"
+
+
+def _backup_key(username: str) -> str:
+    return f"{DOMAIN}.backup.{username}"
+
+
 class VersionCoordinator(DataUpdateCoordinator):
     """Fetches the latest published app version from GitHub."""
 
@@ -204,6 +225,73 @@ class HACompanionLabelsView(HomeAssistantView):
             for lbl in label_reg.async_list_labels()
         ]
         return self.json(labels)
+
+
+class HACompanionBackupView(HomeAssistantView):
+    """Guarda y devuelve la configuración de la app del reloj.
+
+    GET  /api/ha_companion/backup?username=<x>
+         -> {"exists": bool, "saved_at": iso|null, "config": {...}|null}
+    POST /api/ha_companion/backup   {"username": "<x>", "config": {...}}
+         -> {"ok": true, "saved_at": iso}
+
+    El `username` identifica el reloj (el mismo que da nombre al sensor
+    maestro), para que dos relojes no se pisen la copia. Si no se indica y solo
+    hay una entrada configurada, se usa esa.
+    """
+
+    url = "/api/ha_companion/backup"
+    name = "api:ha_companion:backup"
+    requires_auth = True
+
+    @staticmethod
+    def _username(hass, pedido: str | None) -> str | None:
+        if pedido:
+            return pedido
+        entradas = [
+            datos.get("username")
+            for clave, datos in hass.data.get(DOMAIN, {}).items()
+            if isinstance(datos, dict) and datos.get("username")
+        ]
+        return entradas[0] if len(entradas) == 1 else None
+
+    async def get(self, request):
+        hass = request.app["hass"]
+        username = self._username(hass, request.query.get("username"))
+        if not username:
+            return self.json({"exists": False, "saved_at": None, "config": None})
+
+        store: Store = Store(hass, BACKUP_VERSION, _backup_key(username))
+        guardado = await store.async_load()
+        if not guardado or not guardado.get("config"):
+            return self.json({"exists": False, "saved_at": None, "config": None})
+        return self.json({
+            "exists": True,
+            "saved_at": guardado.get("saved_at"),
+            "config": guardado["config"],
+        })
+
+    async def post(self, request):
+        hass = request.app["hass"]
+        try:
+            cuerpo = await request.json()
+        except ValueError:
+            return self.json({"ok": False, "error": "invalid_json"}, status_code=400)
+
+        config = cuerpo.get("config")
+        if not isinstance(config, dict) or not config:
+            return self.json({"ok": False, "error": "empty_config"}, status_code=400)
+
+        username = self._username(hass, cuerpo.get("username"))
+        if not username:
+            return self.json({"ok": False, "error": "unknown_username"}, status_code=400)
+
+        saved_at = dt_util.utcnow().isoformat()
+        store: Store = Store(hass, BACKUP_VERSION, _backup_key(username))
+        await store.async_save({"saved_at": saved_at, "config": config})
+        async_dispatcher_send(hass, f"{BACKUP_SIGNAL}_{username}", saved_at, len(config))
+        _LOGGER.info("Saved watch configuration backup for %s (%d keys)", username, len(config))
+        return self.json({"ok": True, "saved_at": saved_at})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -293,6 +381,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.data[DOMAIN].get("labels_view_registered"):
         hass.http.register_view(HACompanionLabelsView())
         hass.data[DOMAIN]["labels_view_registered"] = True
+
+    # Copia de seguridad de la configuración de la app del reloj.
+    if not hass.data[DOMAIN].get("backup_view_registered"):
+        hass.http.register_view(HACompanionBackupView())
+        hass.data[DOMAIN]["backup_view_registered"] = True
 
     # Coordinator is shared — create it only once per HA instance
     if "version_coordinator" not in hass.data[DOMAIN]:

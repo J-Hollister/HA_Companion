@@ -250,6 +250,9 @@
       },
       "is_charging": {
         "name": "Charging"
+      },
+      "config_backup": {
+        "name": "Configuration Backup"
       }
     }
   },

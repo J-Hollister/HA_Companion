@@ -245,6 +245,9 @@
             },
             "is_charging": {
                 "name": "En charge"
+            },
+            "config_backup": {
+                "name": "Sauvegarde de Configuration"
             }
         },
         "device_tracker": {

@@ -4,6 +4,24 @@ Todos los cambios notables de la integración **HA Companion** para Home Assista
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y el versionado es [SemVer](https://semver.org/lang/es/).
 
+## [0.1.9] - Sin publicar
+
+### Añadido
+- **Copia de seguridad de la configuración del reloj.** Cambiar de reloj o
+  reinstalar la app obligaba a volver a elegir las entidades una a una,
+  reordenar el menú y reconfigurar los widgets. Ahora la app puede guardar su
+  configuración aquí y recuperarla después:
+  - `POST /api/ha_companion/backup` la guarda (indexada por reloj, para que
+    dos relojes no se pisen), `GET` la devuelve.
+  - Un sensor nuevo, **Copia de Configuración**, dice si hay copia y de cuándo
+    es (atributos `last_backup` y `entries`), así que se puede automatizar un
+    aviso si lleva mucho sin actualizarse.
+  - **Las credenciales no se guardan**: la URL y el token hay que teclearlos
+    igualmente al reinstalar, así que no hacen falta en la copia y no quedan
+    en disco.
+  Necesita la versión 2.13 de la app del reloj, que es la que trae los botones
+  de exportar e importar.
+
 ## [0.1.8] - Sin publicar
 
 ### Corregido

@@ -242,6 +242,9 @@
             },
             "is_charging": {
                 "name": "Cargando"
+            },
+            "config_backup": {
+                "name": "Copia de Configuración"
             }
         }
     },
