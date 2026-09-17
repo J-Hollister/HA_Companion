@@ -17,7 +17,7 @@
  *
  * config:
  *   type: custom:ha-companion-weight-card
- *   entity: sensor.<reloj>_peso      (obligatorio)
+ *   entity: sensor.<reloj>_peso      (opcional: si falta, se busca solo)
  *   range: week | month | year       (opcional, por defecto month)
  *   title: Peso                      (opcional)
  *   decimals: 1                      (opcional, por defecto 1)
@@ -31,6 +31,40 @@ const idioma = (hass) => {
     .toLowerCase().slice(0, 2);
   return SOPORTADOS.includes(l) ? l : "en";
 };
+
+// --- Encontrar las entidades sin depender del idioma -----------------------
+// El entity_id se genera a partir del nombre traducido, así que cambia con el
+// idioma de la instalación: buscar por texto ("_peso", "_recent_workouts") solo
+// acierta en el idioma en el que se escribió la tarjeta. Lo estable es la clave
+// del `unique_id` del registro (`<ULID>_<clave>`), que es justo lo que mira el
+// panel. Va duplicado en cada tarjeta a propósito: así ninguna depende de que
+// otro fichero se haya cargado antes.
+const ULID = 26;
+async function relojesDeHA(hass) {
+  let ents;
+  try {
+    ents = await hass.callWS({ type: "config/entity_registry/list" });
+  } catch (_) {
+    return [];
+  }
+  const porDisp = new Map();
+  for (const e of ents || []) {
+    if (e.platform !== "ha_companion" || !e.device_id || !e.unique_id) continue;
+    const clave = e.unique_id.slice(ULID + 1);
+    if (!clave) continue;
+    if (!porDisp.has(e.device_id)) porDisp.set(e.device_id, {});
+    porDisp.get(e.device_id)[clave] = e.entity_id;
+  }
+  // Delante, el reloj que esté dando datos: con dos relojes dados de alta, el
+  // que interesa por defecto es el que se está usando.
+  const vivo = (c) => {
+    const id = c.record_time || c.battery;
+    const st = id && hass.states[id];
+    return !!st && st.state !== "unavailable" && st.state !== "unknown";
+  };
+  const todos = [...porDisp.values()];
+  return todos.filter(vivo).concat(todos.filter((c) => !vivo(c)));
+}
 
 const T = {
   es: {
@@ -148,18 +182,22 @@ const ESTILOS = `
 `;
 
 class HaCompanionWeightCard extends HTMLElement {
-  static getStubConfig(hass) {
-    const e = Object.keys(hass.states).find(
-      (x) => /^sensor\./.test(x) && /(_peso|_weight|_gewicht|_poids)$/.test(x)
-    );
-    return { type: "custom:ha-companion-weight-card", entity: e || "", range: "month" };
+  static async getStubConfig(hass) {
+    const relojes = await relojesDeHA(hass);
+    const reloj = relojes.find((c) => c.user_weight);
+    return {
+      type: "custom:ha-companion-weight-card",
+      entity: (reloj && reloj.user_weight) || "",
+      range: "month",
+    };
   }
 
   setConfig(config) {
-    if (!config || !config.entity) {
-      throw new Error("Missing `entity`: the watch weight sensor");
-    }
-    this._config = config;
+    // Sin `entity` NO se lanza error: la tarjeta busca sola el sensor de peso
+    // del reloj que esté dando datos. Así se puede añadir desde el selector sin
+    // saberse los entity_id, que además cambian con el idioma.
+    this._config = config || {};
+    this._entidad = this._config.entity || null;
     this._rango = RANGOS[config.range] ? config.range : "month";
     this._serie = null;        // null = sin pedir todavía
     this._pedido = null;       // huella de la última petición, para no repetirla
@@ -178,7 +216,7 @@ class HaCompanionWeightCard extends HTMLElement {
     this._hass = hass;
     if (primero) { this._actualizar(); return; }
     // Repintar solo si cambió el peso o el idioma, no con la casa entera.
-    const st = hass.states[this._config.entity];
+    const st = hass.states[this._entidad];
     const huella = `${idioma(hass)}|${this._rango}|` + (st ? `${st.state}` : "sin");
     if (huella === this._pintado) return;
     this._pintado = huella;
@@ -189,16 +227,26 @@ class HaCompanionWeightCard extends HTMLElement {
 
   async _actualizar() {
     if (!this._hass || !this._card) return;
-    const st = this._hass.states[this._config.entity];
+
+    // Sin entidad configurada, se busca el peso del reloj activo. Una vez.
+    if (!this._entidad && !this._buscando) {
+      this._buscando = true;
+      const relojes = await relojesDeHA(this._hass);
+      const reloj = relojes.find((c) => c.user_weight);
+      this._entidad = (reloj && reloj.user_weight) || null;
+      this._buscando = false;
+    }
+
+    const st = this._hass.states[this._entidad];
     this._render(st);                 // pinta ya lo que se sabe (valor de ahora)
     if (!st) return;
 
-    const huella = `${this._config.entity}|${this._rango}`;
+    const huella = `${this._entidad}|${this._rango}`;
     if (huella === this._pedido) return;
     this._pedido = huella;
     this._serie = null;
     await this._pedirSerie();
-    this._render(this._hass.states[this._config.entity]);
+    this._render(this._hass.states[this._entidad]);
   }
 
   /** Estadísticas del recorder; si no hay, el historial normal. */
@@ -206,7 +254,7 @@ class HaCompanionWeightCard extends HTMLElement {
     const r = RANGOS[this._rango];
     const fin = new Date();
     const ini = new Date(fin.getTime() - r.dias * 86400000);
-    const id = this._config.entity;
+    const id = this._entidad;
 
     try {
       const res = await this._hass.callWS({
@@ -259,7 +307,7 @@ class HaCompanionWeightCard extends HTMLElement {
     c.setAttribute("header", this._config.title || t.titulo);
 
     if (!st) {
-      c.innerHTML = `<div class="error">${t.sinEntidad(this._config.entity)}</div>`;
+      c.innerHTML = `<div class="error">${t.sinEntidad(this._entidad || "—")}</div>`;
       return;
     }
 

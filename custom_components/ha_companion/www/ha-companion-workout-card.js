@@ -14,7 +14,7 @@
  *
  * config:
  *   type: custom:ha-companion-workout-card
- *   entity: sensor.<algo>_recent_workouts        (obligatorio, atributo `workouts`)
+ *   entity: sensor.<algo>_recent_workouts        (opcional: si falta, se busca solo)
  *   load_entity: sensor.<reloj>_carga_de_entrenamiento    (opcional)
  *   vo2_entity: sensor.<reloj>_vo2_max                    (opcional)
  *   recovery_entity: sensor.<reloj>_tiempo_de_recuperacion_total  (opcional)
@@ -29,6 +29,40 @@ const idioma = (hass) => {
   const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase().slice(0, 2);
   return SOPORTADOS.includes(l) ? l : "en";
 };
+
+// --- Encontrar las entidades sin depender del idioma -----------------------
+// El entity_id se genera a partir del nombre traducido, así que cambia con el
+// idioma de la instalación: buscar por texto ("_peso", "_recent_workouts") solo
+// acierta en el idioma en el que se escribió la tarjeta. Lo estable es la clave
+// del `unique_id` del registro (`<ULID>_<clave>`), que es justo lo que mira el
+// panel. Va duplicado en cada tarjeta a propósito: así ninguna depende de que
+// otro fichero se haya cargado antes.
+const ULID = 26;
+async function relojesDeHA(hass) {
+  let ents;
+  try {
+    ents = await hass.callWS({ type: "config/entity_registry/list" });
+  } catch (_) {
+    return [];
+  }
+  const porDisp = new Map();
+  for (const e of ents || []) {
+    if (e.platform !== "ha_companion" || !e.device_id || !e.unique_id) continue;
+    const clave = e.unique_id.slice(ULID + 1);
+    if (!clave) continue;
+    if (!porDisp.has(e.device_id)) porDisp.set(e.device_id, {});
+    porDisp.get(e.device_id)[clave] = e.entity_id;
+  }
+  // Delante, el reloj que esté dando datos: con dos relojes dados de alta, el
+  // que interesa por defecto es el que se está usando.
+  const vivo = (c) => {
+    const id = c.record_time || c.battery;
+    const st = id && hass.states[id];
+    return !!st && st.state !== "unavailable" && st.state !== "unknown";
+  };
+  const todos = [...porDisp.values()];
+  return todos.filter(vivo).concat(todos.filter((c) => !vivo(c)));
+}
 
 // Un color por familia de deporte; el resto cae en el neutro. Se compara
 // contra el nombre en inglés del SDK (SPORT_TYPES), que es estable
@@ -164,15 +198,22 @@ const dur = (min) => {
 };
 
 class HaCompanionWorkoutCard extends HTMLElement {
-  static getStubConfig(hass) {
-    const e = Object.keys(hass.states).find((x) => x.endsWith("_recent_workouts"));
-    return { type: "custom:" + TAG, entity: e || "" };
+  static async getStubConfig(hass) {
+    const relojes = await relojesDeHA(hass);
+    const r = relojes.find((c) => c.workout_history);
+    return {
+      type: "custom:" + TAG,
+      entity: (r && r.workout_history) || "",
+      load_entity: (r && r.workout_training_load) || undefined,
+      vo2_entity: (r && r.workout_vo2_max) || undefined,
+      recovery_entity: (r && r.workout_full_recovery_time) || undefined,
+    };
   }
 
   setConfig(config) {
-    if (!config || !config.entity) {
-      throw new Error("Missing `entity`: the recent workouts sensor");
-    }
+    // Sin `entity` no se lanza error: se busca sola. El id que había escrito
+    // aquí ("_recent_workouts") solo existe en instalaciones en inglés.
+    config = config || {};
     this._config = config;
     this._pintado = null;
     // Igual que en la tarjeta del sueño: setConfig se llama más de una vez sobre
@@ -187,10 +228,31 @@ class HaCompanionWorkoutCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    if (!this._config.entity) { this._buscar(); return; }
     const st = hass.states[this._config.entity];
     const huella = `${idioma(hass)}|` + (st ? `${st.state}|${st.last_updated}` : "sin-entidad");
     if (huella === this._pintado) return;
     this._pintado = huella;
+    this._render();
+  }
+
+  /** Busca el sensor de entrenamientos del reloj activo si no se configuró. */
+  async _buscar() {
+    if (this._buscando) return;
+    this._buscando = true;
+    const relojes = await relojesDeHA(this._hass);
+    const r = relojes.find((c) => c.workout_history);
+    if (r) {
+      this._config = {
+        load_entity: r.workout_training_load,
+        vo2_entity: r.workout_vo2_max,
+        recovery_entity: r.workout_full_recovery_time,
+        ...this._config,                 // lo que el usuario puso manda
+        entity: r.workout_history,
+      };
+    }
+    this._buscando = false;
+    this._pintado = null;
     this._render();
   }
 
@@ -214,7 +276,7 @@ class HaCompanionWorkoutCard extends HTMLElement {
 
     const st = this._hass.states[this._config.entity];
     if (!st) {
-      c.innerHTML = `<div class="error">${t.noExiste(this._config.entity)}</div>`;
+      c.innerHTML = `<div class="error">${t.noExiste(this._config.entity || "—")}</div>`;
       return;
     }
 

@@ -32,6 +32,17 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   empieza el día que se instale esta versión; los primeros días la tarjeta tira
   del historial normal para no salir vacía.
 
+### Corregido
+- **Las tarjetas ya se pueden añadir a cualquier panel, no solo al nuestro.**
+  Se registraban en todo el frontend desde el principio, pero al añadirlas desde
+  "Añadir tarjeta" venían inservibles salvo en una instalación como la del
+  autor: la semanal traía escrito su propio reloj (`sensor.balance_jesus`) y
+  buscaba las fases por sufijos en español, la del sueño buscaba un `entity_id`
+  que solo existe en español y la de entrenamientos, uno que solo existe en
+  inglés. Ahora **si no se configura entidad, cada tarjeta busca sola** la del
+  reloj que esté dando datos, por la clave del registro, que no cambia con el
+  idioma. Configurarlas a mano sigue funcionando igual.
+
 ## [0.1.8] - Sin publicar
 
 ### Corregido

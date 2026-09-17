@@ -17,7 +17,7 @@
  *
  * config:
  *   type: custom:ha-companion-sleep-card
- *   entity: sensor.<algo>_cronologia_del_sueno   (obligatorio)
+ *   entity: sensor.<algo>_cronologia_del_sueno   (opcional: si falta, se busca solo)
  *   score_entity: sensor.<...>_puntuacion_del_sueno   (opcional; también acepta
  *                                                       el sensor maestro, vía sleep_info)
  *   title: Anoche                                (opcional)
@@ -28,6 +28,40 @@ const idioma = (hass) => {
   const l = String((hass && (hass.language || (hass.locale && hass.locale.language))) || "en").toLowerCase().slice(0, 2);
   return SOPORTADOS.includes(l) ? l : "en";
 };
+
+// --- Encontrar las entidades sin depender del idioma -----------------------
+// El entity_id se genera a partir del nombre traducido, así que cambia con el
+// idioma de la instalación: buscar por texto ("_peso", "_recent_workouts") solo
+// acierta en el idioma en el que se escribió la tarjeta. Lo estable es la clave
+// del `unique_id` del registro (`<ULID>_<clave>`), que es justo lo que mira el
+// panel. Va duplicado en cada tarjeta a propósito: así ninguna depende de que
+// otro fichero se haya cargado antes.
+const ULID = 26;
+async function relojesDeHA(hass) {
+  let ents;
+  try {
+    ents = await hass.callWS({ type: "config/entity_registry/list" });
+  } catch (_) {
+    return [];
+  }
+  const porDisp = new Map();
+  for (const e of ents || []) {
+    if (e.platform !== "ha_companion" || !e.device_id || !e.unique_id) continue;
+    const clave = e.unique_id.slice(ULID + 1);
+    if (!clave) continue;
+    if (!porDisp.has(e.device_id)) porDisp.set(e.device_id, {});
+    porDisp.get(e.device_id)[clave] = e.entity_id;
+  }
+  // Delante, el reloj que esté dando datos: con dos relojes dados de alta, el
+  // que interesa por defecto es el que se está usando.
+  const vivo = (c) => {
+    const id = c.record_time || c.battery;
+    const st = id && hass.states[id];
+    return !!st && st.state !== "unavailable" && st.state !== "unknown";
+  };
+  const todos = [...porDisp.values()];
+  return todos.filter(vivo).concat(todos.filter((c) => !vivo(c)));
+}
 
 // Normaliza el texto de fase (en cualquiera de los 5 idiomas que manda el
 // servidor) a un código interno. Lo que no se reconozca cae en su propio
@@ -155,17 +189,24 @@ const duracion = (min) => {
 };
 
 class HaCompanionSleepCard extends HTMLElement {
-  static getStubConfig(hass) {
-    const e = Object.keys(hass.states).find((x) => x.includes("cronologia_del_sueno"));
-    return { type: "custom:ha-companion-sleep-card", entity: e || "" };
+  static async getStubConfig(hass) {
+    const relojes = await relojesDeHA(hass);
+    const reloj = relojes.find((c) => c.sleep_timeline);
+    return {
+      type: "custom:ha-companion-sleep-card",
+      entity: (reloj && reloj.sleep_timeline) || "",
+      score_entity: (reloj && reloj.sleep_score) || undefined,
+    };
   }
 
   setConfig(config) {
-    if (!config || !config.entity) {
-      throw new Error("Missing `entity`: the sleep timeline sensor");
-    }
-    this._config = config;
+    // Sin `entity` no se lanza error: se busca sola la cronología del reloj
+    // activo. El entity_id depende del idioma de la instalación, así que
+    // exigirlo dejaba la tarjeta inservible desde el selector salvo en español.
+    this._config = config || {};
+    this._entidad = this._config.entity || null;
     this._pintado = null;
+    this._buscando = false;
     // Home Assistant llama a setConfig más de una vez sobre el mismo elemento
     // (al reevaluar la vista, al reconstruir la tarjeta...). attachShadow por
     // segunda vez lanza NotSupportedError y la tarjeta entera queda en
@@ -176,18 +217,35 @@ class HaCompanionSleepCard extends HTMLElement {
     }
     this._card = this.shadowRoot.querySelector("ha-card");
     // El estado que ya tuviéramos debe repintarse con la configuración nueva.
-    if (this._hass) this._render(this._hass.states[config.entity]);
+    if (this._hass && this._entidad) this._render(this._hass.states[this._entidad]);
   }
 
   set hass(hass) {
     this._hass = hass;
-    const st = hass.states[this._config.entity];
+    if (!this._entidad) { this._buscar(); return; }
+    const st = hass.states[this._entidad];
     // Repintar solo si cambió algo: el hipnograma es caro y `hass` llega a
     // cada cambio de estado de la casa entera.
     const huella = `${idioma(hass)}|` + (st ? `${st.state}|${st.last_updated}` : "sin-entidad");
     if (huella === this._pintado) return;
     this._pintado = huella;
     this._render(st);
+  }
+
+  /** Busca la cronología del reloj activo cuando no se configuró entidad. */
+  async _buscar() {
+    if (this._buscando) return;
+    this._buscando = true;
+    const relojes = await relojesDeHA(this._hass);
+    const reloj = relojes.find((c) => c.sleep_timeline);
+    this._entidad = (reloj && reloj.sleep_timeline) || null;
+    if (!this._config.score_entity && reloj && reloj.sleep_score) {
+      this._config = { ...this._config, score_entity: reloj.sleep_score };
+    }
+    this._buscando = false;
+    this._pintado = null;
+    if (this._entidad) this._render(this._hass.states[this._entidad]);
+    else this._render(null);
   }
 
   getCardSize() { return 5; }
@@ -219,7 +277,7 @@ class HaCompanionSleepCard extends HTMLElement {
     if (this._config.title) c.setAttribute("header", this._config.title);
 
     if (!st) {
-      c.innerHTML = `<div class="error">${t.noExiste(this._config.entity)}</div>`;
+      c.innerHTML = `<div class="error">${t.noExiste(this._entidad || "—")}</div>`;
       return;
     }
 

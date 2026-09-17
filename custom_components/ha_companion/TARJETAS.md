@@ -1,7 +1,7 @@
 # Panel y tarjetas de HA Companion
 
 Desde esta versión, HA Companion trae **su propio panel en la barra lateral** y
-**tres tarjetas de Lovelace**. **No hay que instalar nada ni dar de alta ningún
+**cuatro tarjetas de Lovelace**. **No hay que instalar nada ni dar de alta ningún
 recurso**: la integración lo sirve y lo registra todo sola al arrancar.
 
 | Qué | Dónde |
@@ -10,8 +10,24 @@ recurso**: la integración lo sirve y lo registra todo sola al arrancar.
 | `custom:ha-companion-sleep-card` | Hipnograma de la última noche |
 | `custom:ha-companion-sleep-week-card` | Las últimas noches, apiladas por fase |
 | `custom:ha-companion-workout-card` | Historial de entrenamientos, a su hora real |
+| `custom:ha-companion-weight-card` | El peso y su evolución |
 
 Sustituye `balance_jesus` por el nombre de tu reloj en todos los ejemplos.
+
+## Las tarjetas valen en cualquier panel, no solo en el nuestro
+
+El panel de la barra lateral es **un ejemplo montado**, no el único sitio donde
+viven las tarjetas. Se registran en el frontend entero (`add_extra_js_url`), así
+que aparecen en **Añadir tarjeta** de cualquier panel de Lovelace, con el nombre
+**HA Companion · …**, y se pueden mezclar con las tarjetas de siempre.
+
+Y **no hace falta saberse los `entity_id`**: si no se configura entidad, cada
+tarjeta busca sola la del reloj que esté dando datos. Esto importa más de lo que
+parece, porque el `entity_id` se genera a partir del nombre traducido y **cambia
+con el idioma de la instalación**: lo que en español es
+`sensor.balance_jesus_sueno_profundo`, en inglés es `..._deep_sleep`. Por eso la
+búsqueda va por la clave del `unique_id` del registro, que es estable, igual que
+hace el panel. Si se configura entidad a mano, manda la configuración.
 
 ---
 
