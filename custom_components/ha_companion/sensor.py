@@ -819,6 +819,8 @@ class BackupDateSensor(SensorEntity):
         self._entradas: int | None = None
 
         self._attr_has_entity_name = True
+        # Ojo al añadir idiomas: la clave es `config_backup_date`, no
+        # `backup_date`. Buscar por el nombre del sensor no la encuentra.
         self._attr_translation_key = "config_backup_date"
         self._attr_unique_id = f"{entry_id}_config_backup_date"
         self._attr_icon = "mdi:clock-check-outline"
