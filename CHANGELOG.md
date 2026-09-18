@@ -48,7 +48,7 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   reloj que esté dando datos, por la clave del registro, que no cambia con el
   idioma. Configurarlas a mano sigue funcionando igual.
 
-## [0.1.8] - Sin publicar
+## [0.1.8] - 2026-09-14
 
 ### Corregido
 - **`async_setup_entry` bloqueaba el bucle de eventos al leer el manifest y
