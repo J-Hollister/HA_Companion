@@ -192,6 +192,18 @@
             },
             "config_backup_date": {
                 "name": "Data da Cópia"
+            },
+            "naps_count": {
+                "name": "Sestas"
+            },
+            "naps_total": {
+                "name": "Tempo de Sesta"
+            },
+            "naps_last_start": {
+                "name": "Início da Última Sesta"
+            },
+            "naps_last_end": {
+                "name": "Fim da Última Sesta"
             }
         },
         "binary_sensor": {

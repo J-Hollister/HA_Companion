@@ -151,7 +151,10 @@ class WatchSensor(SensorEntity):
                 )
                 return None
 
-        # --- Arrays de objetos (array_extract: "last/average/max/min") ---
+        # --- Arrays de objetos (array_extract) ---
+        # Modos: last / first / average / max / min / count / sum.
+        # `array_field` elige el campo dentro de cada objeto; sin él se opera
+        # sobre los elementos tal cual.
         elif self._config.get("array_extract"):
             try:
                 if isinstance(attr_value, str):
@@ -161,43 +164,46 @@ class WatchSensor(SensorEntity):
                 else:
                     return None
 
-                if not isinstance(data, list) or len(data) == 0:
+                if not isinstance(data, list):
                     return None
 
                 field = self._config.get("array_field")
                 mode = self._config["array_extract"]
 
+                # `count` y `sum` sí tienen respuesta para una lista vacía: cero
+                # siestas es un dato, no un "no se sabe". Los demás modos no.
+                if mode == "count":
+                    return len(data)
+                if mode == "sum":
+                    valores = self._valores_de(data, field)
+                    return sum(valores) if valores else 0
+                if len(data) == 0:
+                    return None
+
                 if mode == "last":
                     val = data[-1]
-                    return val.get(field) if field and isinstance(val, dict) else val
-
+                    result = val.get(field) if field and isinstance(val, dict) else val
                 elif mode == "first":
                     val = data[0]
-                    return val.get(field) if field and isinstance(val, dict) else val
-
+                    result = val.get(field) if field and isinstance(val, dict) else val
                 elif mode == "average":
-                    values = [
-                        (item.get(field) if field and isinstance(item, dict) else item)
-                        for item in data
-                    ]
-                    values = [v for v in values if v is not None]
-                    return round(sum(values) / len(values), 1) if values else None
-
+                    valores = self._valores_de(data, field)
+                    result = round(sum(valores) / len(valores), 1) if valores else None
                 elif mode == "max":
-                    values = [
-                        (item.get(field) if field and isinstance(item, dict) else item)
-                        for item in data
-                    ]
-                    values = [v for v in values if v is not None]
-                    return max(values) if values else None
-
+                    valores = self._valores_de(data, field)
+                    result = max(valores) if valores else None
                 elif mode == "min":
-                    values = [
-                        (item.get(field) if field and isinstance(item, dict) else item)
-                        for item in data
-                    ]
-                    values = [v for v in values if v is not None]
-                    return min(values) if values else None
+                    valores = self._valores_de(data, field)
+                    result = min(valores) if valores else None
+                else:
+                    return None
+
+                # Igual que en json_extract: un número de minutos se enseña como
+                # hora. Lo usan las siestas, que llegan en minutos desde las 00:00.
+                if self._config.get("time_convert") and result is not None:
+                    result = int(result)
+                    return f"{(result // 60) % 24:02d}:{result % 60:02d}"
+                return result
 
             except Exception as e:
                 _LOGGER.warning(
@@ -328,6 +334,15 @@ class WatchSensor(SensorEntity):
     # TENDENCIA 7 DÍAS (trend_extract) — de las estadísticas del propio
     # recorder de HA, no de nada que mande el reloj.
     # ============================================================
+    @staticmethod
+    def _valores_de(data: list, field: str | None) -> list:
+        """Los valores de una lista de objetos, saltando los que no hay."""
+        valores = [
+            (item.get(field) if field and isinstance(item, dict) else item)
+            for item in data
+        ]
+        return [v for v in valores if v is not None]
+
     @property
     def extra_state_attributes(self) -> dict:
         attrs = {}

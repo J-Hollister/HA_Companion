@@ -192,6 +192,18 @@
             },
             "config_backup_date": {
                 "name": "Data Kopii"
+            },
+            "naps_count": {
+                "name": "Drzemki"
+            },
+            "naps_total": {
+                "name": "Czas Drzemek"
+            },
+            "naps_last_start": {
+                "name": "Początek Ostatniej Drzemki"
+            },
+            "naps_last_end": {
+                "name": "Koniec Ostatniej Drzemki"
             }
         },
         "binary_sensor": {

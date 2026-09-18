@@ -201,6 +201,18 @@
             },
             "config_backup_date": {
                 "name": "Datum der Sicherung"
+            },
+            "naps_count": {
+                "name": "Nickerchen"
+            },
+            "naps_total": {
+                "name": "Nickerchen-Dauer"
+            },
+            "naps_last_start": {
+                "name": "Letztes Nickerchen Beginn"
+            },
+            "naps_last_end": {
+                "name": "Letztes Nickerchen Ende"
             }
         },
         "binary_sensor": {

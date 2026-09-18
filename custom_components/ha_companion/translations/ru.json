@@ -192,6 +192,18 @@
             },
             "config_backup_date": {
                 "name": "Дата резервной копии"
+            },
+            "naps_count": {
+                "name": "Дневной сон"
+            },
+            "naps_total": {
+                "name": "Время дневного сна"
+            },
+            "naps_last_start": {
+                "name": "Начало последнего сна"
+            },
+            "naps_last_end": {
+                "name": "Конец последнего сна"
             }
         },
         "binary_sensor": {

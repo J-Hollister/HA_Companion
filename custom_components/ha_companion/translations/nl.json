@@ -192,6 +192,18 @@
             },
             "config_backup_date": {
                 "name": "Back-updatum"
+            },
+            "naps_count": {
+                "name": "Dutjes"
+            },
+            "naps_total": {
+                "name": "Dutjestijd"
+            },
+            "naps_last_start": {
+                "name": "Start Laatste Dutje"
+            },
+            "naps_last_end": {
+                "name": "Einde Laatste Dutje"
             }
         },
         "binary_sensor": {

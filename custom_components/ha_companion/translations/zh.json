@@ -192,6 +192,18 @@
             },
             "config_backup_date": {
                 "name": "备份日期"
+            },
+            "naps_count": {
+                "name": "小睡"
+            },
+            "naps_total": {
+                "name": "小睡时长"
+            },
+            "naps_last_start": {
+                "name": "上次小睡开始"
+            },
+            "naps_last_end": {
+                "name": "上次小睡结束"
             }
         },
         "binary_sensor": {
