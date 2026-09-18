@@ -198,6 +198,9 @@
       },
       "sync_age": {
         "name": "Sync Age"
+      },
+      "config_backup_date": {
+        "name": "Backup Date"
       }
     },
     "device_tracker": {

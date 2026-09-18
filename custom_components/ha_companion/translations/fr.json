@@ -198,6 +198,9 @@
             },
             "sync_age": {
                 "name": "Ancienneté de la synchro"
+            },
+            "config_backup_date": {
+                "name": "Date de la Sauvegarde"
             }
         },
         "binary_sensor": {

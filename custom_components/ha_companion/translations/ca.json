@@ -189,6 +189,9 @@
                     "in_motion": "En moviment",
                     "not_sure": "Indeterminat"
                 }
+            },
+            "config_backup_date": {
+                "name": "Data de la Còpia"
             }
         },
         "binary_sensor": {
@@ -233,6 +236,9 @@
             },
             "update_pending": {
                 "name": "Actualització Disponible"
+            },
+            "config_backup": {
+                "name": "Còpia de Configuració"
             }
         }
     }

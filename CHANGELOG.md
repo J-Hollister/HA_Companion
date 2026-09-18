@@ -13,9 +13,12 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   configuración aquí y recuperarla después:
   - `POST /api/ha_companion/backup` la guarda (indexada por reloj, para que
     dos relojes no se pisen), `GET` la devuelve.
-  - Un sensor nuevo, **Copia de Configuración**, dice si hay copia y de cuándo
-    es (atributos `last_backup` y `entries`), así que se puede automatizar un
-    aviso si lleva mucho sin actualizarse.
+  - Dos entidades nuevas: **Copia de Configuración**, que dice si la hay, y
+    **Fecha de la Copia**, cuyo valor es la fecha de la última — así se ve en
+    una tarjeta de un vistazo y se puede automatizar un aviso si lleva mucho
+    sin actualizarse. En los doce idiomas de la integración.
+  - Los ajustes del teléfono también enseñan esa fecha al abrirlos, sin tener
+    que exportar antes para enterarse.
   - **Las credenciales no se guardan**: la URL y el token hay que teclearlos
     igualmente al reinstalar, así que no hacen falta en la copia y no quedan
     en disco.

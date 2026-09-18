@@ -189,6 +189,9 @@
                     "in_motion": "In beweging",
                     "not_sure": "Onzeker"
                 }
+            },
+            "config_backup_date": {
+                "name": "Back-updatum"
             }
         },
         "binary_sensor": {
@@ -233,6 +236,9 @@
             },
             "update_pending": {
                 "name": "Update beschikbaar"
+            },
+            "config_backup": {
+                "name": "Configuratieback-up"
             }
         }
     }

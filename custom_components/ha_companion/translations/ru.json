@@ -189,6 +189,9 @@
                     "in_motion": "В движении",
                     "not_sure": "Не определено"
                 }
+            },
+            "config_backup_date": {
+                "name": "Дата резервной копии"
             }
         },
         "binary_sensor": {
@@ -233,6 +236,9 @@
             },
             "update_pending": {
                 "name": "Доступно обновление"
+            },
+            "config_backup": {
+                "name": "Резервная копия настроек"
             }
         }
     }

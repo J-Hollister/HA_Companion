@@ -195,6 +195,9 @@
             },
             "sync_age": {
                 "name": "Desde la última sincronización"
+            },
+            "config_backup_date": {
+                "name": "Fecha de la Copia"
             }
         },
         "binary_sensor": {

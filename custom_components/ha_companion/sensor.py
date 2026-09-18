@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import json
 from datetime import datetime, timedelta, timezone
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -13,6 +13,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.const import EntityCategory
 from homeassistant.util import dt as dt_util
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import statistics_during_period
 
@@ -57,6 +59,7 @@ async def async_setup_entry(
                 WatchSensor(hass, config_entry.entry_id, username, master_sensor_id, sensor_config)
             )
     entities.append(PublishedVersionSensor(coordinator, config_entry.entry_id, username))
+    entities.append(BackupDateSensor(hass, config_entry.entry_id, username))
     async_add_entities(entities, True)
 
 
@@ -792,3 +795,70 @@ class PublishedVersionSensor(CoordinatorEntity, SensorEntity):
     @property
     def available(self) -> bool:
         return self.coordinator.last_update_success and self.native_value is not None
+
+
+class BackupDateSensor(SensorEntity):
+    """Cuándo se hizo la última copia de la configuración del reloj.
+
+    La copia ya la refleja el binary sensor, pero ahí la fecha vive en un
+    atributo: para verla de un vistazo en una tarjeta, o para automatizar un
+    aviso de "esto lleva meses sin actualizarse", hace falta un sensor cuyo
+    VALOR sea la fecha. De eso va esta entidad.
+
+    Como el binary sensor, no sale de los atributos del sensor maestro: lee el
+    `Store` al arrancar y cada vez que llega la señal de copia nueva.
+    """
+
+    _attr_should_poll = False
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, hass: HomeAssistant, entry_id: str, username: str) -> None:
+        self.hass = hass
+        self._username = username
+        self._attr_native_value = None
+        self._entradas: int | None = None
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "config_backup_date"
+        self._attr_unique_id = f"{entry_id}_config_backup_date"
+        self._attr_icon = "mdi:clock-check-outline"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{username}_watch")},
+            name=f"{username.capitalize()} Amazfit Watch",
+            manufacturer="Aguacatec Team",
+            model="Amazfit Watch",
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {"entries": self._entradas}
+
+    async def _lee_store(self) -> None:
+        """Igual que el binary sensor: la verdad está en el Store, no en la
+        señal, para que la fecha no sobreviva a una copia que ya no existe."""
+        from . import BACKUP_VERSION, _backup_key
+
+        store: Store = Store(self.hass, BACKUP_VERSION, _backup_key(self._username))
+        guardado = await store.async_load()
+        if guardado and guardado.get("config"):
+            self._attr_native_value = dt_util.parse_datetime(guardado.get("saved_at") or "")
+            self._entradas = len(guardado["config"])
+        else:
+            self._attr_native_value = None
+            self._entradas = None
+
+    async def _actualiza(self) -> None:
+        await self._lee_store()
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        from . import BACKUP_SIGNAL
+
+        await self._lee_store()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"{BACKUP_SIGNAL}_{self._username}", self._actualiza
+            )
+        )
