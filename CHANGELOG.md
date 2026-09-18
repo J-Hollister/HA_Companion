@@ -22,8 +22,11 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   - **Las credenciales no se guardan**: la URL y el token hay que teclearlos
     igualmente al reinstalar, así que no hacen falta en la copia y no quedan
     en disco.
-  Necesita la versión 2.13 de la app del reloj, que es la que trae los botones
-  de exportar e importar.
+  Necesita la versión **2.13 de la app del reloj**, que es la que trae los
+  botones de exportar e importar. Hasta que la 2.13 esté publicada, esas dos
+  entidades se ven vacías —*Copia de Configuración* en `off` y *Fecha de la
+  Copia* sin valor— porque todavía no hay nada que exporte: es lo esperado, no
+  un fallo.
 - **Tarjeta nueva del peso** (`custom:ha-companion-weight-card`), a petición de
   un usuario: el peso de ahora mismo, cuánto ha subido o bajado en el periodo,
   la línea de evolución y el mínimo, la media y el máximo. Tres botones para
