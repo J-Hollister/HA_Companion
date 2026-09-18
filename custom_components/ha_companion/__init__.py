@@ -335,6 +335,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN]["blueprints_installed"] = True
 
     # Serve + register the bundled Lovelace cards once per HA instance.
+    # La ruta estática solo se puede registrar una vez por arranque.
     if not hass.data[DOMAIN].get("card_registered"):
         await hass.http.async_register_static_paths(
             [
@@ -345,11 +346,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
             ]
         )
-        for filename in CARDS:
-            url = f"{CARD_STATIC_URL}/{filename}?v={await _card_token(hass, filename)}"
-            add_extra_js_url(hass, url)
-            _LOGGER.debug("Registered Lovelace card at %s", url)
         hass.data[DOMAIN]["card_registered"] = True
+
+    # Las URLs de las tarjetas, en cambio, se anuncian DE NUEVO en cada setup,
+    # igual que el panel. Llevan el token de caché (el mtime del fichero): si se
+    # dejaran detrás de la guarda de arriba, tras actualizar la integración se
+    # seguiría anunciando la URL vieja hasta el siguiente reinicio completo, y
+    # como la URL no cambia pero el fichero sí, el navegador serviría el módulo
+    # antiguo de su caché. Con esto basta con recargar la integración.
+    anteriores = hass.data[DOMAIN].get("card_urls", [])
+    actuales = [
+        f"{CARD_STATIC_URL}/{filename}?v={await _card_token(hass, filename)}"
+        for filename in CARDS
+    ]
+    # Quitar las de la versión anterior: si no, quedarían anunciadas las dos y
+    # el navegador cargaría el módulo dos veces (la segunda no puede registrar
+    # los mismos elementos y se pierde).
+    for vieja in anteriores:
+        if vieja in actuales:
+            continue
+        with contextlib.suppress(Exception):
+            from homeassistant.components.frontend import remove_extra_js_url
+
+            remove_extra_js_url(hass, vieja)
+    for url in actuales:
+        add_extra_js_url(hass, url)
+        _LOGGER.debug("Registered Lovelace card at %s", url)
+    hass.data[DOMAIN]["card_urls"] = actuales
 
     # Panel de la barra lateral. Va aparte de las tarjetas: si el registro del
     # panel fallara, las tarjetas deben seguir funcionando igualmente.

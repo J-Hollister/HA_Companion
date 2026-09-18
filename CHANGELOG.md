@@ -46,6 +46,13 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   Con un solo reloj ni eso: la opción por defecto ya vale.
 
 ### Corregido
+- **Recargar la integración no refrescaba las tarjetas.** Sus URLs se anunciaban
+  una sola vez por arranque, así que tras actualizar seguía anunciándose la
+  dirección anterior hasta reiniciar Home Assistant entero — y como la
+  dirección no cambiaba pero el fichero sí, el navegador servía el archivo
+  viejo de su caché. Ahora se vuelven a anunciar en cada arranque de la
+  entrada, como ya hacía el panel, y se retira la dirección anterior para que
+  no queden las dos.
 - **Las tarjetas ya se pueden añadir a cualquier panel, no solo al nuestro.**
   Se registraban en todo el frontend desde el principio, pero al añadirlas desde
   "Añadir tarjeta" venían inservibles salvo en una instalación como la del
