@@ -44,9 +44,10 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   Zepp apunta el sueño fuera de horas como siestas, aparte del sueño principal,
   así que su descanso de verdad no aparecía por ningún lado. Son cuatro:
   **Siestas** (cuántas hoy), **Tiempo de Siestas** (minutos en total), y el
-  **inicio** y el **fin de la última**. En los doce idiomas. Necesita la 2.13
-  de la app, que es la que empieza a mandar ese dato; en relojes anteriores a
-  Zepp OS 3.0 el reloj no lo da y los sensores se quedan vacíos.
+  **inicio** y el **fin de la última**. En los doce idiomas.
+  Necesita la **2.13 de la app**, que es la que empieza a mandar ese dato: hasta
+  entonces los cuatro se ven vacíos, igual que los de la copia. Y en relojes
+  anteriores a Zepp OS 3.0 seguirán vacíos, porque ahí el reloj no da siestas.
 - **Editor visual en las cuatro tarjetas.** Al añadirlas desde la interfaz sale
   un desplegable con los relojes dados de alta: se elige el tuyo por su nombre y
   la tarjeta queda configurada, sin tocar YAML ni saberse ningún `entity_id`.
