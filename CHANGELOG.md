@@ -31,7 +31,6 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   largo plazo. **Ojo: HA no las rellena hacia atrás**, así que la gráfica
   empieza el día que se instale esta versión; los primeros días la tarjeta tira
   del historial normal para no salir vacía.
-
 - **Editor visual en las cuatro tarjetas.** Al añadirlas desde la interfaz sale
   un desplegable con los relojes dados de alta: se elige el tuyo por su nombre y
   la tarjeta queda configurada, sin tocar YAML ni saberse ningún `entity_id`.
