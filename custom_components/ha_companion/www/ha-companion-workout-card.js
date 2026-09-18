@@ -523,7 +523,35 @@ class HaCompanionWorkoutCardEditor extends EditorBase {
   }
 }
 
+// Nombre y descripcion del selector de tarjetas. No hay `hass` cuando se
+// registra la tarjeta, asi que el idioma sale del <html lang> que pone el
+// propio frontend de Home Assistant.
+const FICHA = {
+  "es": [
+    "Entrenamientos",
+    "El historial de entrenamientos, cada uno a su hora real."
+  ],
+  "en": [
+    "Workouts",
+    "Workout history, placed at their real time of day."
+  ],
+  "fr": [
+    "Entraînements",
+    "L'historique des séances, chacune à son heure réelle."
+  ],
+  "de": [
+    "Training",
+    "Der Trainingsverlauf, jede Einheit zu ihrer echten Uhrzeit."
+  ],
+  "it": [
+    "Allenamenti",
+    "Lo storico degli allenamenti, ognuno alla sua ora reale."
+  ]
+};
+
 const definir = () => {
+  const l = String(document.documentElement.lang || "en").toLowerCase().slice(0, 2);
+  const lang = FICHA[l] ? l : "en";
   try {
     if (!customElements.get(TAG)) customElements.define(TAG, HaCompanionWorkoutCard);
     if (!customElements.get(TAG + "-editor")) {
@@ -531,14 +559,18 @@ const definir = () => {
     }
   } catch (_) { /* ya registrada */ }
   window.customCards = window.customCards || [];
-  if (!window.customCards.some((c) => c.type === TAG)) {
-    window.customCards.push({
-      type: TAG,
-      name: "HA Companion · Workouts",
-      description: "Workout history, placed at their real time of day.",
-      preview: false,
-    });
-  }
+  // El reintento tambien REESCRIBE nombre y descripcion: cuando se registra la
+  // tarjeta, el frontend puede no haber puesto aun el idioma en <html>, asi que
+  // la primera pasada cae en ingles y la siguiente ya lo corrige.
+  const ficha = {
+    type: TAG,
+    name: "HA Companion \u00b7 " + FICHA[lang][0],
+    description: FICHA[lang][1],
+    preview: false,
+  };
+  const puesta = window.customCards.find((c) => c.type === TAG);
+  if (puesta) Object.assign(puesta, ficha);
+  else window.customCards.push(ficha);
 };
 
 // Mismo motivo que en la tarjeta del sueño: los módulos de extra_module_url se

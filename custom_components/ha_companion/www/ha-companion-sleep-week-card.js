@@ -988,7 +988,35 @@ class HaCompanionSleepWeekCardEditor extends EditorBase {
   }
 }
 
+// Nombre y descripcion del selector de tarjetas. No hay `hass` cuando se
+// registra la tarjeta, asi que el idioma sale del <html lang> que pone el
+// propio frontend de Home Assistant.
+const FICHA = {
+  "es": [
+    "Sueño (semana)",
+    "Las últimas noches apiladas por fase, de las estadísticas."
+  ],
+  "en": [
+    "Sleep (week)",
+    "Recent nights stacked by phase, from the recorder statistics."
+  ],
+  "fr": [
+    "Sommeil (semaine)",
+    "Les dernières nuits empilées par phase, depuis les statistiques."
+  ],
+  "de": [
+    "Schlaf (Woche)",
+    "Die letzten Nächte nach Phasen gestapelt, aus den Statistiken."
+  ],
+  "it": [
+    "Sonno (settimana)",
+    "Le ultime notti impilate per fase, dalle statistiche."
+  ]
+};
+
 const definir = () => {
+  const l = String(document.documentElement.lang || "en").toLowerCase().slice(0, 2);
+  const lang = FICHA[l] ? l : "en";
   try {
     if (!customElements.get(TAG)) customElements.define(TAG, HaCompanionSleepWeekCard);
     if (!customElements.get(TAG + "-editor")) {
@@ -996,14 +1024,18 @@ const definir = () => {
     }
   } catch (_) { /* ya registrada */ }
   window.customCards = window.customCards || [];
-  if (!window.customCards.some((c) => c.type === TAG)) {
-    window.customCards.push({
-      type: TAG,
-      name: "HA Companion · Sleep (week)",
-      description: "Recent nights stacked by phase, from the recorder statistics.",
-      preview: false,
-    });
-  }
+  // El reintento tambien REESCRIBE nombre y descripcion: cuando se registra la
+  // tarjeta, el frontend puede no haber puesto aun el idioma en <html>, asi que
+  // la primera pasada cae en ingles y la siguiente ya lo corrige.
+  const ficha = {
+    type: TAG,
+    name: "HA Companion \u00b7 " + FICHA[lang][0],
+    description: FICHA[lang][1],
+    preview: false,
+  };
+  const puesta = window.customCards.find((c) => c.type === TAG);
+  if (puesta) Object.assign(puesta, ficha);
+  else window.customCards.push(ficha);
 };
 
 definir();

@@ -559,7 +559,35 @@ class HaCompanionWeightCardEditor extends HTMLElement {
   }
 }
 
+// Nombre y descripcion del selector de tarjetas. No hay `hass` cuando se
+// registra la tarjeta, asi que el idioma sale del <html lang> que pone el
+// propio frontend de Home Assistant.
+const FICHA = {
+  "es": [
+    "Peso",
+    "El peso de ahora y su evolución por semana, mes o año."
+  ],
+  "en": [
+    "Weight",
+    "Current weight and how it has evolved over week, month or year."
+  ],
+  "fr": [
+    "Poids",
+    "Le poids actuel et son évolution par semaine, mois ou année."
+  ],
+  "de": [
+    "Gewicht",
+    "Das aktuelle Gewicht und sein Verlauf über Woche, Monat oder Jahr."
+  ],
+  "it": [
+    "Peso",
+    "Il peso attuale e la sua evoluzione per settimana, mese o anno."
+  ]
+};
+
 const definir = () => {
+  const l = String(document.documentElement.lang || "en").toLowerCase().slice(0, 2);
+  const lang = FICHA[l] ? l : "en";
   try {
     if (!customElements.get(TAG)) customElements.define(TAG, HaCompanionWeightCard);
     if (!customElements.get(TAG + "-editor")) {
@@ -567,14 +595,18 @@ const definir = () => {
     }
   } catch (_) { /* ya registrada */ }
   window.customCards = window.customCards || [];
-  if (!window.customCards.some((c) => c.type === TAG)) {
-    window.customCards.push({
-      type: TAG,
-      name: "HA Companion · Weight",
-      description: "Current weight and how it has evolved over week, month or year.",
-      preview: false,
-    });
-  }
+  // El reintento tambien REESCRIBE nombre y descripcion: cuando se registra la
+  // tarjeta, el frontend puede no haber puesto aun el idioma en <html>, asi que
+  // la primera pasada cae en ingles y la siguiente ya lo corrige.
+  const ficha = {
+    type: TAG,
+    name: "HA Companion \u00b7 " + FICHA[lang][0],
+    description: FICHA[lang][1],
+    preview: false,
+  };
+  const puesta = window.customCards.find((c) => c.type === TAG);
+  if (puesta) Object.assign(puesta, ficha);
+  else window.customCards.push(ficha);
 };
 
 // Mismo motivo que en las otras tarjetas: los módulos de extra_module_url se

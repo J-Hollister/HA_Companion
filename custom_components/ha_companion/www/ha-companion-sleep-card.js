@@ -558,7 +558,35 @@ class HaCompanionSleepCardEditor extends EditorBase {
   }
 }
 
+// Nombre y descripcion del selector de tarjetas. No hay `hass` cuando se
+// registra la tarjeta, asi que el idioma sale del <html lang> que pone el
+// propio frontend de Home Assistant.
+const FICHA = {
+  "es": [
+    "Sueño",
+    "El hipnograma de anoche, del sensor de cronología del sueño."
+  ],
+  "en": [
+    "Sleep",
+    "Last night's hypnogram from the sleep timeline sensor."
+  ],
+  "fr": [
+    "Sommeil",
+    "L'hypnogramme de la nuit dernière, du capteur de chronologie."
+  ],
+  "de": [
+    "Schlaf",
+    "Das Hypnogramm der letzten Nacht aus dem Schlafverlauf-Sensor."
+  ],
+  "it": [
+    "Sonno",
+    "L'ipnogramma della scorsa notte, dal sensore della cronologia."
+  ]
+};
+
 const definir = () => {
+  const l = String(document.documentElement.lang || "en").toLowerCase().slice(0, 2);
+  const lang = FICHA[l] ? l : "en";
   try {
     if (!customElements.get(TAG)) customElements.define(TAG, HaCompanionSleepCard);
     if (!customElements.get(TAG + "-editor")) {
@@ -568,14 +596,18 @@ const definir = () => {
     /* ya registrada en este registro: nada que hacer */
   }
   window.customCards = window.customCards || [];
-  if (!window.customCards.some((c) => c.type === TAG)) {
-    window.customCards.push({
-      type: TAG,
-      name: "HA Companion · Sleep",
-      description: "Last night's hypnogram from the sleep timeline sensor.",
-      preview: false,
-    });
-  }
+  // El reintento tambien REESCRIBE nombre y descripcion: cuando se registra la
+  // tarjeta, el frontend puede no haber puesto aun el idioma en <html>, asi que
+  // la primera pasada cae en ingles y la siguiente ya lo corrige.
+  const ficha = {
+    type: TAG,
+    name: "HA Companion \u00b7 " + FICHA[lang][0],
+    description: FICHA[lang][1],
+    preview: false,
+  };
+  const puesta = window.customCards.find((c) => c.type === TAG);
+  if (puesta) Object.assign(puesta, ficha);
+  else window.customCards.push(ficha);
 };
 
 definir();
