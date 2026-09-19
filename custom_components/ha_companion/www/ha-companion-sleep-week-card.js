@@ -98,11 +98,18 @@ async function relojesDeHA(hass) {
 }
 
 // Mismo lenguaje de color que ha-companion-sleep-card: se leen juntas.
+// En el ORDEN EN QUE SE VEN, de arriba abajo: despierto, ligero, profundo, REM
+// — de peor a mejor calidad de sueño, el mismo criterio que la leyenda de la
+// tarjeta de la noche y del hipnograma. Un usuario avisó de que aquí no
+// coincidía: la barra se pintaba con `column-reverse`, así que el array iba al
+// revés de lo que se veía y era imposible de seguir. Ahora el array ES el orden
+// visual y la barra se pinta en `column`; si se cambia una cosa hay que cambiar
+// la otra.
 const FASES = [
+  { sufijo: "_tiempo_despierto", clave: "AWAKE", color: "#F0A030" },
+  { sufijo: "_sueno_ligero",   clave: "LIGHT", color: "#5B8DEF" },
   { sufijo: "_sueno_profundo", clave: "DEEP", color: "#3D5AAF" },
   { sufijo: "_sueno_rem",      clave: "REM",  color: "#A78BFA" },
-  { sufijo: "_sueno_ligero",   clave: "LIGHT", color: "#5B8DEF" },
-  { sufijo: "_tiempo_despierto", clave: "AWAKE", color: "#F0A030" },
 ];
 const FASE_NOMBRE = {
   es: { DEEP: "Profundo", REM: "REM", LIGHT: "Ligero", AWAKE: "Despierto" },
@@ -263,7 +270,7 @@ const ESTILOS = `
          height: 100%; gap: 0; position: relative; }
   .col.pulsable { cursor: pointer; }
   .col.pulsable:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
-  .pila { display: flex; flex-direction: column-reverse; border-radius: 4px;
+  .pila { display: flex; flex-direction: column; border-radius: 4px;
           overflow: hidden; transition: filter .12s; }
   .pila:hover { filter: brightness(1.3); }
   .trozo { width: 100%; }

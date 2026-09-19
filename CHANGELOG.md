@@ -54,6 +54,13 @@ y el versionado es [SemVer](https://semver.org/lang/es/).
   Con un solo reloj ni eso: la opción por defecto ya vale.
 
 ### Corregido
+- **El orden de las fases en la tarjeta semanal.** La 0.1.8 puso el orden
+  acordado —despierto, ligero, profundo, REM— en la tarjeta de la noche y en el
+  hipnograma, pero en la semanal se quedó al revés y con el profundo y el REM
+  cambiados: la barra se pintaba con `column-reverse`, así que el array iba en
+  sentido contrario a lo que se veía. Ahora la barra, su leyenda y el texto que
+  sale al pasar el ratón siguen los cuatro el mismo orden. Avisado por el mismo
+  usuario que pidió el cambio de la 0.1.8.
 - **Recargar la integración no refrescaba las tarjetas.** Sus URLs se anunciaban
   una sola vez por arranque, así que tras actualizar seguía anunciándose la
   dirección anterior hasta reiniciar Home Assistant entero — y como la
